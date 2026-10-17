@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OtomaX — Monitor transaksi</title>
+<meta name="description" content="Mockup dashboard operator server pulsa/PPOB OtomaX Linux — bahasa visual ShipMate yang di-improve.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root, [data-theme="light"]{
+  color-scheme: light;
+  --bg:#fbfbfa; --surface:#ffffff; --surface-2:#f5f3f1; --frame:#f0eeed;
+  --ink:#191919; --body:#33302c; --muted:#5b564e; --faint:#6e6860;
+  --line:#e7e2dd; --line-soft:#efe9e4;
+  --orange:#f66e27; --orange-deep:#d95a15; --orange-soft:#fde8d8; --orange-ink:#8a3c10;
+  --ok:#2e9e5b;      --ok-bg:#e1f2e7;   --ok-ink:#1c6a3a;
+  --warn:#cf8617;    --warn-bg:#fae7bd; --warn-ink:#7a4f00;
+  --err:#cf3d3d;     --err-bg:#fadada;  --err-ink:#9c2b2b;
+  --info:#4f5fd6;
+  --crisis:#b3261e; --crisis-ink:#ffffff;
+  --chip:#f4f1ee;
+  --shadow:0 4px 16px rgba(31,30,29,.06);
+  --shadow-lg:0 12px 32px rgba(31,30,29,.10);
+  --flash:#fde8d8;
+}
+[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#161311; --surface:#201c18; --surface-2:#262019; --frame:#2c2721;
+  --ink:#f4efe8; --body:#d8d1c6; --muted:#b3aa9c; --faint:#a39a8b;
+  --line:#332c24; --line-soft:#2b251e;
+  --orange:#ff8f52; --orange-deep:#e07a35; --orange-soft:#3d2817; --orange-ink:#ffb98a;
+  --ok:#54c47e;      --ok-bg:#183024;   --ok-ink:#8fdcab;
+  --warn:#eeb04a;    --warn-bg:#38290f; --warn-ink:#f2cc82;
+  --err:#ef6f6f;     --err-bg:#3a1c1c;  --err-ink:#f49c9c;
+  --info:#8b96f0;
+  --crisis:#cf4636; --crisis-ink:#ffffff;
+  --chip:#2a241e;
+  --shadow:0 8px 24px rgba(0,0,0,.38);
+  --shadow-lg:0 16px 40px rgba(0,0,0,.5);
+  --flash:#3d2817;
+}
+/* ============ BASE ============ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Plus Jakarta Sans','Manrope','Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg); color:var(--body);
+  font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  transition:background .25s ease,color .25s ease;
+}
+.mono{font-family:'JetBrains Mono','IBM Plex Mono',ui-monospace,monospace;font-feature-settings:'tnum'}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:2px;border-radius:6px}
+::selection{background:var(--orange-soft)}
+.app{display:flex;min-height:100vh}
+/* ============ SIDEBAR ============ */
+.sidebar{
+  width:236px;flex:0 0 236px;position:sticky;top:0;height:100vh;
+  background:var(--surface);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:18px 14px;
+  transition:background .25s ease,border-color .25s ease;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 8px 16px}
+.brand-mark{
+  width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--orange),var(--orange-deep));
+  display:grid;place-items:center;flex:0 0 34px;
+  box-shadow:0 4px 12px rgba(246,110,39,.35);
+}
+.brand-mark svg{width:19px;height:19px;stroke:#fff}
+.brand-name{font-weight:800;font-size:16px;color:var(--ink);letter-spacing:-.01em;line-height:1.15}
+.brand-name small{display:block;font-weight:500;font-size:11px;color:var(--muted);letter-spacing:0}
+.nav-label{font-size:11px;font-weight:600;color:var(--faint);padding:10px 10px 6px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;
+  color:var(--muted);font-weight:500;font-size:13.5px;text-decoration:none;
+  transition:background .15s ease,color .15s ease;
+}
+.nav-item svg{width:17px;height:17px;stroke-width:1.75;flex:0 0 17px}
+.nav-item:hover{background:var(--chip);color:var(--ink)}
+.nav-item.active{background:var(--orange-soft);color:var(--orange-ink);font-weight:700}
+[data-theme="dark"] .nav-item.active{color:var(--orange)}
+.nav-badge{margin-left:auto;font-size:10.5px;font-weight:700;background:var(--err-bg);color:var(--err-ink);
+  border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.theme-toggle{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;
+  border:1px solid var(--line);color:var(--muted);font-weight:600;font-size:13px;
+  transition:border-color .15s,background .15s;
+}
+.theme-toggle:hover{border-color:var(--orange);color:var(--ink)}
+.theme-toggle svg{width:16px;height:16px;stroke-width:1.75}
+.theme-toggle .knob{margin-left:auto;width:34px;height:19px;border-radius:999px;background:var(--chip);
+  border:1px solid var(--line);position:relative;transition:background .2s}
+.theme-toggle .knob::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;
+  border-radius:50%;background:var(--orange);transition:transform .2s}
+[data-theme="dark"] .theme-toggle .knob::after{transform:translateX(15px)}
+.user-chip{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:var(--surface-2)}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5b63c1,#8b5cf6);
+  color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:0 0 32px}
+.user-chip .who{line-height:1.3}
+.user-chip .who b{display:block;font-size:12.5px;color:var(--ink)}
+.user-chip .who span{font-size:11px;color:var(--muted)}
+/* ============ MAIN ============ */
+.main{flex:1;min-width:0;max-width:1320px;margin:0 auto;padding:22px 26px 40px;width:100%}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.pagehead h1{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.015em;line-height:1.2}
+.pagehead .sub{font-size:13px;color:var(--muted);margin-top:3px}
+.pagehead .sub .mono{font-size:12px}
+.head-right{display:flex;align-items:center;gap:10px}
+.server-pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
+  color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 13px}
+.server-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+/* ============ CRISIS STRIP — satu-satunya elemen berani ============ */
+.crisis{
+  display:flex;align-items:center;gap:14px;
+  background:var(--crisis);color:var(--crisis-ink);
+  border-radius:14px;padding:13px 18px;margin-bottom:18px;
+  box-shadow:0 8px 24px rgba(179,38,30,.28);
+  animation:crisis-pulse 2.6s ease-in-out infinite;
+}
+@keyframes crisis-pulse{
+  0%,100%{box-shadow:0 8px 24px rgba(179,38,30,.28)}
+  50%{box-shadow:0 8px 34px rgba(179,38,30,.55)}
+}
+.crisis svg{width:22px;height:22px;stroke-width:2;flex:0 0 22px}
+.crisis .msg{font-size:13.5px;line-height:1.45}
+.crisis .msg b{font-weight:800}
+.crisis .msg .mono{font-weight:600}
+.crisis .act{margin-left:auto;flex:0 0 auto;background:rgba(255,255,255,.16);color:#fff;
+  font-weight:700;font-size:13px;padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.35);
+  transition:background .15s}
+.crisis .act:hover{background:rgba(255,255,255,.28)}
+/* ============ KPI ============ */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;padding:16px 18px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;transition:background .25s,border-color .25s}
+.kpi::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:3px;background:var(--kc,var(--line))}
+.kpi .lbl{font-size:12.5px;font-weight:600;color:var(--muted)}
+.kpi .val{font-size:29px;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin:4px 0 8px;
+  font-family:'JetBrains Mono',monospace}
+.kpi .delta{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;
+  padding:4px 10px;border-radius:999px}
+.delta.up-ok{background:var(--ok-bg);color:var(--ok-ink)}
+.delta.down-ok{background:var(--ok-bg);color:var(--ok-ink)}
+.delta.up-bad{background:var(--err-bg);color:var(--err-ink)}
+.kpi .note{font-size:11px;color:var(--faint);margin-top:7px}
+/* ============ CARDS / GRID ============ */
+.card{background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;
+  box-shadow:var(--shadow);transition:background .25s,border-color .25s}
+.card-head{display:flex;align-items:center;gap:10px;padding:16px 18px 0;flex-wrap:wrap}
+.card-head h2{font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:-.005em}
+.card-head .hint{font-size:12px;color:var(--faint)}
+.charts{display:grid;grid-template-columns:1.9fr 1fr;gap:14px;margin-bottom:16px}
+.ops{display:grid;grid-template-columns:1.9fr 1fr;gap:14px}
+/* live badge */
+.live-badge{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;
+  color:var(--ok-ink);background:var(--ok-bg);border-radius:999px;padding:5px 12px 5px 9px;letter-spacing:.02em}
+.live-badge .pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);position:relative}
+.live-badge .pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid var(--ok);opacity:.6;animation:ping 1.6s ease-out infinite}
+@keyframes ping{0%{transform:scale(.5);opacity:.7}80%,100%{transform:scale(1.25);opacity:0}}
+.live-badge.paused{color:var(--muted);background:var(--chip)}
+.live-badge.paused .pulse{background:var(--faint)}
+.live-badge.paused .pulse::after{display:none}
+.clock{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;color:var(--muted);
+  background:var(--surface-2);border:1px solid var(--line-soft);border-radius:9px;padding:6px 11px}
+/* ============ CHART ============ */
+.chart-wrap{padding:8px 10px 6px;position:relative}
+.chart-tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);
+  font-size:11.5px;font-weight:600;border-radius:8px;padding:6px 10px;white-space:nowrap;
+  transform:translate(-50%,-130%);opacity:0;transition:opacity .12s;z-index:5}
+.chart-tip .mono{font-weight:700}
+.chart-legend{display:flex;gap:18px;padding:4px 20px 16px;font-size:12px;color:var(--muted)}
+.chart-legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:baseline}
+.chart-legend .avg{width:18px;height:0;border-top:2px dashed var(--faint);display:inline-block;margin-right:6px;vertical-align:middle}
+/* donut */
+.donut-wrap{display:flex;align-items:center;gap:18px;padding:14px 20px 20px}
+.donut{position:relative;width:148px;height:148px;flex:0 0 148px}
+.donut svg{width:148px;height:148px;transform:rotate(-90deg)}
+.donut .track{stroke:var(--line-soft);fill:none}
+.donut .seg{fill:none;stroke-linecap:butt;transition:stroke-dasharray .6s ease,stroke-dashoffset .6s ease}
+.donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.donut-center b{font-size:23px;font-weight:800;color:var(--ink);font-family:'JetBrains Mono',monospace;letter-spacing:-.02em}
+.donut-center span{font-size:11px;color:var(--muted)}
+.donut-legend{display:flex;flex-direction:column;gap:11px;flex:1}
+.dl-row{display:flex;align-items:center;gap:9px;font-size:12.5px}
+.dl-row .sw{width:11px;height:11px;border-radius:4px;flex:0 0 11px}
+.dl-row .nm{color:var(--muted);font-weight:500}
+.dl-row .ct{margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--ink);font-size:12.5px}
+.dl-row .pc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);width:44px;text-align:right}
+/* ============ LIVE TABLE ============ */
+.toolbar{display:flex;align-items:center;gap:10px;padding:12px 18px;flex-wrap:wrap}
+.chips{display:flex;gap:8px}
+.chip{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--chip);
+  border:1px solid transparent;border-radius:999px;padding:7px 14px;transition:all .15s}
+.chip:hover{color:var(--ink);border-color:var(--line)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .n{font-family:'JetBrains Mono',monospace;font-size:11px;opacity:.75;margin-left:5px}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--surface-2);
+  border:1px solid var(--line-soft);border-radius:10px;padding:7px 12px;min-width:200px}
+.search svg{width:15px;height:15px;stroke:var(--faint);stroke-width:1.75;flex:0 0 15px}
+.search input{background:none;border:none;outline:none;width:100%;font-size:13px;color:var(--ink)}
+.search input::placeholder{color:var(--faint)}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  border-radius:10px;padding:8px 15px;transition:all .15s;border:1px solid transparent}
+.btn svg{width:15px;height:15px;stroke-width:2}
+.btn-pause{background:var(--ink);color:var(--bg)}
+.btn-pause:hover{opacity:.88}
+.btn-pause.live-off{background:var(--orange);color:#fff}
+.btn-ghost{border-color:var(--line);color:var(--muted);background:var(--surface)}
+.btn-ghost:hover{color:var(--ink);border-color:var(--orange)}
+.table-scroll{max-height:624px;overflow-y:auto;border-top:1px solid var(--line-soft)}
+.table-scroll::-webkit-scrollbar{width:10px}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;border:2px solid var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{position:sticky;top:0;background:var(--surface-2);z-index:2;text-align:left;
+  font-size:11px;font-weight:600;color:var(--muted);padding:9px 12px;white-space:nowrap;
+  border-bottom:1px solid var(--line)}
+tbody td{padding:0 12px;height:31px;border-bottom:1px solid var(--line-soft);white-space:nowrap;color:var(--body)}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.flash{animation:rowflash 1.6s ease-out}
+@keyframes rowflash{0%{background:var(--flash)}100%{background:transparent}}
+td.mono,th.mono{font-size:12px}
+td.num{text-align:right;font-weight:600}
+td .kode{color:var(--ink);font-weight:600}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  border-radius:999px;padding:3px 10px;letter-spacing:.015em}
+.status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.status.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.status.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.status.err{background:var(--err-bg);color:var(--err-ink)}
+.modem-tag{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);
+  background:var(--chip);border-radius:6px;padding:3px 8px}
+.tfoot{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;
+  font-size:12px;color:var(--faint)}
+.empty-row td{text-align:center;padding:34px 12px !important;color:var(--faint);font-size:13px}
+/* ============ MODEM PANEL ============ */
+.modem-list{display:flex;flex-direction:column;padding:6px 10px 4px}
+.modem{padding:13px 10px;border-bottom:1px solid var(--line-soft)}
+.modem:last-child{border-bottom:none}
+.modem-top{display:flex;align-items:center;gap:10px}
+.modem-name{font-weight:700;font-size:13.5px;color:var(--ink)}
+.modem-port{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint)}
+.sig{margin-left:auto;display:flex;align-items:flex-end;gap:2.5px;height:16px}
+.sig i{width:4px;border-radius:2px;background:var(--line)}
+.sig i:nth-child(1){height:5px}.sig i:nth-child(2){height:9px}
+.sig i:nth-child(3){height:12px}.sig i:nth-child(4){height:16px}
+.sig i.on{background:var(--ok)}
+.sig.weak i.on{background:var(--warn)}
+.sig.down i{background:var(--line)}
+.modem-meta{display:flex;align-items:center;gap:8px;margin-top:9px}
+.modem-meta .csq{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint)}
+.atlog{margin:6px 10px 16px;background:var(--ink);border-radius:12px;padding:13px 15px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75;color:#c9c2b6;
+  max-height:172px;overflow:hidden;position:relative}
+[data-theme="dark"] .atlog{background:#0d0b09;color:#a89f90}
+.atlog .t{color:#6f6a60}
+.atlog .ok-l{color:#7ddba0}.atlog .err-l{color:#f09393}.atlog .cmd{color:#ffb98a}
+.atlog::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(transparent 55%,var(--ink) 130%)}
+.panel-actions{display:flex;gap:8px;padding:0 18px 18px}
+/* ============ FOOTER ============ */
+.pagefoot{margin-top:22px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--faint)}
+/* ============ BOTTOM NAV (≤900px) — pengganti sidebar ============ */
+.bottomnav{display:none}
+/* ============ RESPONSIVE ============ */
+@media (max-width:1100px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .charts,.ops{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  .sidebar{display:none}
+  .main{padding:16px 14px 96px}
+  .table-scroll{max-height:480px}
+  .bottomnav{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .bottomnav a{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:7px 2px;border-radius:10px;color:var(--muted);
+    font-size:10.5px;font-weight:600;text-decoration:none;
+  }
+  .bottomnav a svg{width:20px;height:20px;stroke-width:1.75}
+  .bottomnav a.active{color:var(--orange-ink)}
+  [data-theme="dark"] .bottomnav a.active{color:var(--orange)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" aria-label="Navigasi utama">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      </div>
+      <div class="brand-name">OtomaX<small>Server pulsa &amp; PPOB</small></div>
+    </div>
+    <div class="nav-label">Menu</div>
+    <nav class="nav">
+      <a class="nav-item active" href="#" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        Transaksi
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        Produk &amp; parsing
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Reseller
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+        Deposit
+      </a>
+      <a class="nav-item" href="#terminal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 10l2 2-2 2M12 14h4"/></svg>
+        Modul &amp; terminal
+        <span class="nav-badge" id="navAlert">1</span>
+      </a>
+    </nav>
+    <div class="nav-label">Lainnya</div>
+    <nav class="nav">
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Pengaturan
+      </a>
+    </nav>
+    <div class="side-foot">
+      <button class="theme-toggle" id="themeToggle" aria-label="Ganti tema terang/gelap">
+        <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span id="themeLabel">Mode gelap</span>
+        <span class="knob" aria-hidden="true"></span>
+      </button>
+      <div class="user-chip">
+        <div class="avatar">OP</div>
+        <div class="who"><b>Operator malam</b><span>Shift 22.00–06.00</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <header class="pagehead">
+      <div>
+        <h1>Monitor transaksi</h1>
+        <p class="sub">Sabtu, 17 Oktober 2026 &middot; antrean diproses otomatis oleh <span class="mono">engine-jkt-01</span></p>
+      </div>
+      <div class="head-right">
+        <span class="server-pill"><span class="dot"></span>Server JKT-01 normal</span>
+      </div>
+    </header>
+
+    <!-- crisis strip: satu-satunya elemen berani -->
+    <div class="crisis" role="alert" aria-live="assertive">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <p class="msg"><b>M4 (Tri) down <span id="downMins">12</span> menit</b> — <b><span id="pendingCount">47</span> transaksi pending menumpuk</b> di antrean. Pindahkan beban ke modem cadangan sebelum antrean meluap.</p>
+      <button class="act" id="gotoTerminal">Buka terminal</button>
+    </div>
+
+    <!-- KPI -->
+    <section class="kpis" aria-label="Ringkasan hari ini">
+      <div class="kpi" style="--kc:var(--orange)">
+        <div class="lbl">Transaksi hari ini</div>
+        <div class="val" id="kpiTotal">8.412</div>
+        <span class="delta up-ok">↑ 12,4% <span style="font-weight:500;opacity:.75">vs kemarin</span></span>
+        <div class="note">Puncak jam 19.00–21.00 WIB</div>
+      </div>
+      <div class="kpi" style="--kc:var(--ok)">
+        <div class="lbl">Sukses</div>
+        <div class="val" id="kpiOk">7.865</div>
+        <span class="delta up-ok">↑ 9,8% <span style="font-weight:500;opacity:.75">vs kemarin</span></span>
+        <div class="note">Rata-rata proses 4,2 detik</div>
+      </div>
+      <div class="kpi" style="--kc:var(--warn)">
+        <div class="lbl">Pending</div>
+        <div class="val" id="kpiWarn">486</div>
+        <span class="delta up-bad">↑ 34 antrean <span style="font-weight:500;opacity:.75">1 jam terakhir</span></span>
+        <div class="note">47 di antaranya menunggu M4 (Tri)</div>
+      </div>
+      <div class="kpi" style="--kc:var(--err)">
+        <div class="lbl">Gagal</div>
+        <div class="val" id="kpiErr">61</div>
+        <span class="delta down-ok">↓ 18% <span style="font-weight:500;opacity:.75">vs kemarin</span></span>
+        <div class="note">Paling banyak: timeout operator</div>
+      </div>
+    </section>
+
+    <!-- CHARTS -->
+    <section class="charts">
+      <div class="card">
+        <div class="card-head">
+          <h2>Transaksi 7 hari</h2>
+          <span class="hint">Semua modul · diperbarui tiap jam</span>
+        </div>
+        <div class="chart-wrap" id="chartWrap">
+          <svg id="lineChart" viewBox="0 0 640 230" width="100%" role="img" aria-label="Grafik garis transaksi 7 hari terakhir"></svg>
+          <div class="chart-tip" id="chartTip"></div>
+        </div>
+        <div class="chart-legend">
+          <span><span class="sw" style="background:var(--orange)"></span>Transaksi berhasil diproses</span>
+          <span><span class="avg" aria-hidden="true"></span>Rata-rata 6.480/hari</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>Komposisi status</h2>
+          <span class="hint">Hari ini</span>
+        </div>
+        <div class="donut-wrap">
+          <div class="donut" role="img" aria-label="Donat komposisi status transaksi">
+            <svg viewBox="0 0 148 148">
+              <circle class="track" cx="74" cy="74" r="58" stroke-width="20"/>
+              <circle class="seg" id="segOk"   cx="74" cy="74" r="58" stroke-width="20" stroke="var(--ok)"/>
+              <circle class="seg" id="segWarn" cx="74" cy="74" r="58" stroke-width="20" stroke="var(--warn)"/>
+              <circle class="seg" id="segErr"  cx="74" cy="74" r="58" stroke-width="20" stroke="var(--err)"/>
+            </svg>
+            <div class="donut-center"><div><b id="donutPct">93,5%</b><br><span>sukses</span></div></div>
+          </div>
+          <div class="donut-legend">
+            <div class="dl-row"><span class="sw" style="background:var(--ok)"></span><span class="nm">Sukses</span><span class="ct" id="legOk">7.865</span><span class="pc" id="legOkP">93,5%</span></div>
+            <div class="dl-row"><span class="sw" style="background:var(--warn)"></span><span class="nm">Pending</span><span class="ct" id="legWarn">486</span><span class="pc" id="legWarnP">5,8%</span></div>
+            <div class="dl-row"><span class="sw" style="background:var(--err)"></span><span class="nm">Gagal</span><span class="ct" id="legErr">61</span><span class="pc" id="legErrP">0,7%</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OPS: live table + modem rail -->
+    <section class="ops">
+      <div class="card">
+        <div class="card-head">
+          <h2>Transaksi live</h2>
+          <span class="live-badge" id="liveBadge"><span class="pulse"></span><span id="liveText">Live</span></span>
+          <span class="clock" id="clock" aria-label="Jam sekarang">--:--:-- WIB</span>
+        </div>
+        <div class="toolbar">
+          <div class="chips" role="tablist" aria-label="Filter status">
+            <button class="chip on" data-f="all" role="tab" aria-selected="true">Semua<span class="n" id="cAll"></span></button>
+            <button class="chip" data-f="ok" role="tab" aria-selected="false">Sukses<span class="n" id="cOk"></span></button>
+            <button class="chip" data-f="warn" role="tab" aria-selected="false">Pending<span class="n" id="cWarn"></span></button>
+            <button class="chip" data-f="err" role="tab" aria-selected="false">Gagal<span class="n" id="cErr"></span></button>
+          </div>
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="search" type="search" placeholder="Cari kode, nomor, reseller…" aria-label="Cari transaksi">
+          </label>
+          <button class="btn btn-pause" id="pauseBtn" aria-pressed="false">
+            <svg id="icoPause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M9 5v14M15 5v14"/></svg>
+            <svg id="icoPlay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="m6 4 14 8-14 8V4z"/></svg>
+            <span id="pauseLabel">Jeda live</span>
+          </button>
+        </div>
+        <div class="table-scroll" id="tableScroll">
+          <table aria-label="Daftar transaksi live">
+            <thead><tr>
+              <th class="mono">Kode</th><th class="mono">Waktu</th><th>Produk</th>
+              <th class="mono">Tujuan</th><th>Reseller</th><th class="mono" style="text-align:right">Nominal</th>
+              <th>Status</th><th class="mono">Modul</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="tfoot">
+          <span id="rowInfo">Menampilkan 20 transaksi terakhir</span>
+          <span>Simulasi SignalR · tanpa refresh</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" id="terminal">
+          <div class="card-head">
+            <h2>Modem &amp; terminal</h2>
+            <span class="hint">4 port aktif</span>
+          </div>
+          <div class="modem-list">
+            <div class="modem">
+              <div class="modem-top">
+                <div><div class="modem-name">Telkomsel</div><div class="modem-port">/dev/ttyUSB0 · M1</div></div>
+                <div class="sig" aria-label="Sinyal kuat"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+              </div>
+              <div class="modem-meta"><span class="status ok">Terhubung</span><span class="csq">CSQ 24,99 · 8 dtk lalu</span></div>
+            </div>
+            <div class="modem">
+              <div class="modem-top">
+                <div><div class="modem-name">Indosat</div><div class="modem-port">/dev/ttyUSB1 · M2</div></div>
+                <div class="sig" aria-label="Sinyal sedang"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+              </div>
+              <div class="modem-meta"><span class="status ok">Terhubung</span><span class="csq">CSQ 17,99 · 14 dtk lalu</span></div>
+            </div>
+            <div class="modem">
+              <div class="modem-top">
+                <div><div class="modem-name">XL</div><div class="modem-port">/dev/ttyUSB2 · M3</div></div>
+                <div class="sig weak" aria-label="Sinyal lemah"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+              </div>
+              <div class="modem-meta"><span class="status warn">Lemah</span><span class="csq">CSQ 9,99 · 31 dtk lalu</span></div>
+            </div>
+            <div class="modem">
+              <div class="modem-top">
+                <div><div class="modem-name">Tri</div><div class="modem-port">/dev/ttyUSB3 · M4</div></div>
+                <div class="sig down" aria-label="Tidak ada sinyal"><i></i><i></i><i></i><i></i></div>
+              </div>
+              <div class="modem-meta"><span class="status err">Down</span><span class="csq">Tidak ada respons AT · <span id="downCsq">12</span> mnt</span></div>
+            </div>
+          </div>
+          <div class="atlog" id="atlog" aria-label="Log perintah AT terakhir"></div>
+          <div class="panel-actions">
+            <button class="btn btn-ghost" id="retryModem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+              Coba sambungkan ulang
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="pagefoot">
+      <span>Mockup visual — data transaksi, jam, dan log disimulasikan di browser.</span>
+      <span>OtomaX Linux · arah visual ShipMate (improved) · 17 Okt 2026</span>
+    </footer>
+  </main>
+</div>
+<!-- bottom nav: hanya tampil ≤900px sebagai pengganti sidebar -->
+<nav class="bottomnav" aria-label="Navigasi bawah">
+  <a href="#" class="active" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+    <span>Dashboard</span>
+  </a>
+  <a href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+    <span>Transaksi</span>
+  </a>
+  <a href="#terminal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 10l2 2-2 2M12 14h4"/></svg>
+    <span>Terminal</span>
+  </a>
+  <a href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+    <span>Deposit</span>
+  </a>
+  <a href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+    <span>Pengaturan</span>
+  </a>
+</nav>
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const fmtN = n => n.toLocaleString('id-ID');
+const fmtPct = (n,d=1) => n.toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}) + '%';
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+/* ---------- theme (persist localStorage) ---------- */
+const root = document.documentElement;
+function setTheme(t){
+  root.dataset.theme = t;
+  try{ localStorage.setItem('ox-theme', t); }catch(e){}
+  const dark = t === 'dark';
+  $('#themeIconSun').style.display = dark ? 'none' : '';
+  $('#themeIconMoon').style.display = dark ? '' : 'none';
+  $('#themeLabel').textContent = dark ? 'Mode terang' : 'Mode gelap';
+}
+(function initTheme(){
+  let t = 'light';
+  try{ t = localStorage.getItem('ox-theme') || 'light'; }catch(e){}
+  setTheme(t === 'dark' ? 'dark' : 'light');
+})();
+$('#themeToggle').addEventListener('click', () =>
+  setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+/* ---------- WIB clock ---------- */
+const clockFmt = new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+function tickClock(){ $('#clock').textContent = clockFmt.format(new Date()).replace(/\./g,':') + ' WIB'; }
+tickClock(); setInterval(tickClock, 1000);
+
+/* ---------- 7-day line chart (pure SVG) ---------- */
+const days  = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+const vals  = [5210, 6340, 5980, 7120, 6840, 7930, 8412];
+(function drawChart(){
+  const svg = $('#lineChart'), tip = $('#chartTip');
+  const W=640,H=230,P={l:44,r:16,t:14,b:30};
+  const max = Math.ceil(Math.max(...vals)/2000)*2000;
+  const X = i => P.l + i*(W-P.l-P.r)/(vals.length-1);
+  const Y = v => P.t + (1 - v/max)*(H-P.t-P.b);
+  const NS='http://www.w3.org/2000/svg';
+  const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const orange = getComputedStyle(root).getPropertyValue('--orange').trim();
+  // grid
+  for(let g=0; g<=4; g++){
+    const v = max*g/4, y = Y(v);
+    svg.appendChild(el('line',{x1:P.l,x2:W-P.r,y1:y,y2:y,stroke:'var(--line-soft)','stroke-width':1}));
+    const t = el('text',{x:P.l-8,y:y+4,'text-anchor':'end',fill:'var(--faint)','font-size':10,'font-family':'JetBrains Mono,monospace'});
+    t.textContent = (v/1000).toLocaleString('id-ID')+'k'; svg.appendChild(t);
+  }
+  // area + line
+  const pts = vals.map((v,i)=>[X(i),Y(v)]);
+  const line = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const grad = el('linearGradient',{id:'ag',x1:0,y1:0,x2:0,y2:1});
+  grad.innerHTML = '<stop offset="0" stop-color="'+orange+'" stop-opacity=".22"/><stop offset="1" stop-color="'+orange+'" stop-opacity="0"/>';
+  svg.appendChild(grad);
+  svg.appendChild(el('path',{d:line+' L'+X(vals.length-1).toFixed(1)+','+(H-P.b)+' L'+X(0).toFixed(1)+','+(H-P.b)+' Z',fill:'url(#ag)',stroke:'none'}));
+  svg.appendChild(el('path',{d:line,fill:'none',stroke:orange,'stroke-width':2.5,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  // garis rata-rata 6.480/hari (K4): dashed horizontal sesuai legend
+  const avgLine = el('line',{x1:P.l,x2:W-P.r,y1:Y(6480),y2:Y(6480),stroke:'var(--faint)','stroke-width':1.5,'stroke-dasharray':'6,4'});
+  const avgTitle = document.createElementNS(NS,'title');
+  avgTitle.textContent = 'Rata-rata 6.480 transaksi per hari';
+  avgLine.appendChild(avgTitle);
+  svg.appendChild(avgLine);
+  // dots + labels
+  pts.forEach((p,i)=>{
+    const c = el('circle',{cx:p[0],cy:p[1],r:i===vals.length-1?5.5:4,fill:'var(--surface)',stroke:orange,'stroke-width':2.5,style:'cursor:pointer'});
+    const wrap = $('#chartWrap');
+    c.addEventListener('mouseenter',()=>{
+      tip.innerHTML = days[i]+' · <span class="mono">'+fmtN(vals[i])+'</span> transaksi';
+      const r = wrap.getBoundingClientRect(), s = svg.getBoundingClientRect();
+      tip.style.left = ((p[0]/640)*s.width + (s.left-r.left))+'px';
+      tip.style.top  = ((p[1]/230)*s.height + (s.top-r.top))+'px';
+      tip.style.opacity = 1;
+    });
+    c.addEventListener('mouseleave',()=>{ tip.style.opacity = 0; });
+    svg.appendChild(c);
+    const t = el('text',{x:p[0],y:H-10,'text-anchor':'middle',fill:'var(--faint)','font-size':11,'font-weight':600});
+    t.textContent = days[i]; svg.appendChild(t);
+  });
+})();
+
+/* ---------- donut (semantic colors, live-updated) ---------- */
+const C = 2*Math.PI*58;
+const counts = { ok:7865, warn:486, err:61 };
+function drawDonut(){
+  const total = counts.ok+counts.warn+counts.err;
+  const frac = { ok:counts.ok/total, warn:counts.warn/total, err:counts.err/total };
+  let off = 0;
+  [['segOk','ok'],['segWarn','warn'],['segErr','err']].forEach(([id,k])=>{
+    const len = frac[k]*C, e = document.getElementById(id);
+    e.setAttribute('stroke-dasharray', Math.max(len-2,0.5)+' '+(C-Math.max(len-2,0.5)));
+    e.setAttribute('stroke-dashoffset', -off);
+    off += len;
+  });
+  $('#donutPct').textContent = fmtPct(frac.ok*100);
+  $('#legOk').textContent=fmtN(counts.ok);   $('#legOkP').textContent=fmtPct(frac.ok*100);
+  $('#legWarn').textContent=fmtN(counts.warn);$('#legWarnP').textContent=fmtPct(frac.warn*100);
+  $('#legErr').textContent=fmtN(counts.err); $('#legErrP').textContent=fmtPct(frac.err*100);
+  $('#kpiOk').textContent=fmtN(counts.ok); $('#kpiWarn').textContent=fmtN(counts.warn); $('#kpiErr').textContent=fmtN(counts.err);
+}
+drawDonut();
+
+/* ---------- live transactions ---------- */
+const products = [
+  ['Pulsa TSEL 10K',10000],['Pulsa TSEL 25K',25000],['Pulsa TSEL 50K',50000],
+  ['Pulsa ISAT 25K',25000],['Pulsa XL 10K',10000],['Pulsa TRI 20K',20000],
+  ['TSEL Data 12GB',95000],['XL Data 30GB',110000],['ISAT Data 8GB',65000],
+  ['TOKEN PLN 20',22000],['TOKEN PLN 50',52000],['TOKEN PLN 100',102000],
+  ['DANA 50K',52000],['DANA 100K',102000],['OVO 50K',52000],['GOPAY 25K',27000]
+];
+const resellers = ['Bima Cell','Sinar Jaya','Mitra Pulsa','Barokah Cell','Cahaya Komunika','Tunas Abadi','Sumber Rejeki','Prima Seluler'];
+const moduls = ['M1·TSEL','M2·ISAT','M3·XL','M4·TRI'];
+const ops = ['0812','0813','0821','0822','0852','0853','0856','0857','0815','0816'];
+let seq = 90412;
+let live = true, filter = 'all', query = '';
+const tbody = $('#tbody');
+
+function makeTx(){
+  const [prod,nom] = pick(products);
+  const r = Math.random();
+  const st = r < .90 ? 'ok' : (r < .965 ? 'warn' : 'err');
+  return {
+    kode:'TRX'+String(seq++).slice(-6),
+    waktu: clockFmt.format(new Date()).replace(/\./g,':'),
+    prod, tujuan: pick(ops)+String(rnd(10000000,99999999)),
+    rs: 'RS-'+pick(resellers), nom, st,
+    modul: st==='err' ? pick(moduls) : pick(moduls.slice(0,3))
+  };
+}
+function statusBadge(st){
+  return st==='ok' ? '<span class="status ok">Sukses</span>'
+       : st==='warn' ? '<span class="status warn">Pending</span>'
+       : '<span class="status err">Gagal</span>';
+}
+function rowHTML(tx, flash){
+  return '<tr data-st="'+tx.st+'" class="'+(flash?'flash':'')+'">'
+    +'<td class="mono"><span class="kode">'+tx.kode+'</span></td>'
+    +'<td class="mono">'+tx.waktu+'</td>'
+    +'<td>'+tx.prod+'</td>'
+    +'<td class="mono">'+tx.tujuan+'</td>'
+    +'<td>'+tx.rs+'</td>'
+    +'<td class="mono num">Rp'+fmtN(tx.nom)+'</td>'
+    +'<td>'+statusBadge(tx.st)+'</td>'
+    +'<td><span class="modem-tag">'+tx.modul+'</span></td></tr>';
+}
+function matches(tr){
+  const stOk = filter==='all' || tr.dataset.st===filter;
+  if(!stOk) return false;
+  if(!query) return true;
+  return tr.textContent.toLowerCase().includes(query);
+}
+function applyFilter(){
+  let vis=0, nOk=0, nWarn=0, nErr=0;
+  [...tbody.rows].forEach(tr=>{
+    const show = matches(tr), st = tr.dataset.st;
+    if(st==='ok')nOk++; else if(st==='warn')nWarn++; else nErr++;
+    tr.style.display = show ? '' : 'none';
+    if(show) vis++;
+  });
+  $('#cAll').textContent = tbody.rows.length;
+  $('#cOk').textContent = nOk; $('#cWarn').textContent = nWarn; $('#cErr').textContent = nErr;
+  $('#rowInfo').textContent = vis===0
+    ? 'Tidak ada transaksi yang cocok dengan filter.'
+    : 'Menampilkan '+vis+' dari '+tbody.rows.length+' transaksi'+(filter!=='all'||query?' (terfilter)':' terakhir');
+}
+// seed 20 rows
+(function seed(){
+  const now = Date.now();
+  for(let i=0;i<20;i++){
+    const tx = makeTx();
+    tx.waktu = clockFmt.format(new Date(now - i*rnd(4,14)*1000)).replace(/\./g,':');
+    tx.kode = 'TRX'+String(seq - 20 + i).slice(-6);
+    tbody.insertAdjacentHTML('beforeend', rowHTML(tx,false));
+  }
+  seq += 0;
+  applyFilter();
+})();
+// live feed
+setInterval(()=>{
+  if(!live) return;
+  const tx = makeTx();
+  tbody.insertAdjacentHTML('afterbegin', rowHTML(tx,true));
+  while(tbody.rows.length > 40) tbody.deleteRow(-1);
+  counts[tx.st==='ok'?'ok':tx.st==='warn'?'warn':'err']++;
+  const total = counts.ok+counts.warn+counts.err;
+  $('#kpiTotal').textContent = fmtN(total);
+  drawDonut(); applyFilter();
+}, 2600);
+
+/* filter chips */
+document.querySelectorAll('.chip').forEach(ch=>{
+  ch.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(c=>{c.classList.remove('on');c.setAttribute('aria-selected','false');});
+    ch.classList.add('on'); ch.setAttribute('aria-selected','true');
+    filter = ch.dataset.f; applyFilter();
+  });
+});
+/* search */
+$('#search').addEventListener('input', e=>{
+  query = e.target.value.trim().toLowerCase(); applyFilter();
+});
+/* pause / resume */
+$('#pauseBtn').addEventListener('click',()=>{
+  live = !live;
+  $('#pauseLabel').textContent = live ? 'Jeda live' : 'Lanjutkan';
+  $('#icoPause').style.display = live ? '' : 'none';
+  $('#icoPlay').style.display = live ? 'none' : '';
+  $('#pauseBtn').classList.toggle('live-off', !live);
+  $('#pauseBtn').setAttribute('aria-pressed', String(!live));
+  $('#liveBadge').classList.toggle('paused', !live);
+  $('#liveText').textContent = live ? 'Live' : 'Dijeda';
+});
+
+/* ---------- AT log ticker ---------- */
+const atlog = $('#atlog');
+const atLines = [
+  ['<span class="t">14:32:01</span> <span class="cmd">AT+CSQ</span> → M1 <span class="ok-l">OK 24,99</span>'],
+  ['<span class="t">14:32:04</span> <span class="cmd">AT+CMGS</span> → M2 <span class="ok-l">kirim 1 SMS</span>'],
+  ['<span class="t">14:32:09</span> <span class="cmd">AT+CSQ</span> → M3 <span class="ok-l">OK 9,99</span> <span style="color:#eeb04a">lemah</span>'],
+  ['<span class="t">14:32:11</span> <span class="cmd">AT</span> → M4 <span class="err-l">TIMEOUT 3000ms</span>'],
+  ['<span class="t">14:32:11</span> <span class="cmd">AT</span> → M4 <span class="err-l">TIMEOUT 3000ms (coba 2/3)</span>'],
+  ['<span class="t">14:32:14</span> <span class="cmd">AT+CMGS</span> → M1 <span class="ok-l">kirim 2 SMS</span>']
+];
+atlog.innerHTML = atLines.join('<br>');
+setInterval(()=>{
+  const t = clockFmt.format(new Date()).replace(/\./g,':');
+  const m = pick(['M1','M2','M3']);
+  const line = m==='M3' && Math.random()<.4
+    ? '<span class="t">'+t+'</span> <span class="cmd">AT+CSQ</span> → M3 <span class="ok-l">OK 9,99</span> <span style="color:#eeb04a">lemah</span>'
+    : '<span class="t">'+t+'</span> <span class="cmd">AT+CMGS</span> → '+m+' <span class="ok-l">kirim '+rnd(1,3)+' SMS</span>';
+  atLines.push(line); if(atLines.length>7) atLines.shift();
+  atlog.innerHTML = atLines.join('<br>');
+}, 7000);
+
+/* ---------- crisis ticker ---------- */
+let downMin = 12;
+setInterval(()=>{
+  downMin++;
+  $('#downMins').textContent = downMin;
+  $('#downCsq').textContent = downMin;
+}, 60000);
+
+/* ---------- actions ---------- */
+$('#gotoTerminal').addEventListener('click',()=>{
+  $('#terminal').scrollIntoView({behavior:'smooth',block:'center'});
+});
+$('#retryModem').addEventListener('click', function(){
+  const b = this;
+  b.disabled = true; b.style.opacity = .6;
+  const old = b.innerHTML;
+  b.innerHTML = 'Mencoba menyambungkan…';
+  atLines.push('<span class="t">'+clockFmt.format(new Date()).replace(/\./g,':')+'</span> <span class="cmd">ATZ</span> → M4 <span style="color:#eeb04a">reset modem…</span>');
+  atlog.innerHTML = atLines.join('<br>');
+  setTimeout(()=>{
+    atLines.push('<span class="t">'+clockFmt.format(new Date()).replace(/\./g,':')+'</span> <span class="cmd">ATZ</span> → M4 <span class="err-l">gagal — tidak ada respons</span>');
+    if(atLines.length>7) atLines.shift();
+    atlog.innerHTML = atLines.join('<br>');
+    b.innerHTML = old; b.disabled = false; b.style.opacity = 1;
+  }, 2400);
+});
+</script>
+</body>
+</html>
