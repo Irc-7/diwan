@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#161311">
+<title>otomaX — Daftar Hitam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161311; --surface:#201c18; --surface2:#262019;
+  --ink:#f4efe8; --body:#d8d1c6; --muted:#b3aa9c;
+  --line:#332c24; --line-soft:#2b251e; --chip:#2a241e;
+  --orange:#ff8f52; --orange-deep:#e07a35; --orange-ink:#ffb98a; --orange-soft:#3d2817;
+  --ok:#54c47e; --ok-bg:#183024; --ok-ink:#8fdcab;
+  --warn:#eeb04a; --warn-bg:#38290f; --warn-ink:#f2cc82;
+  --err:#ef6f6f; --err-bg:#3a1c1c; --err-ink:#f49c9c;
+  --info:#8b96f0;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:13px;
+  display:grid;grid-template:"top top" 46px "nav main" 1fr "nav foot" 28px/58px 1fr;
+  height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(255,143,82,.28)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+.topbar{grid-area:top;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink)}
+.brand .prompt{color:var(--ok-ink)}
+.brand small{font-weight:400;color:var(--muted);font-size:11px}
+.cmdk{flex:0 1 420px;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);
+  border-radius:6px;padding:7px 10px;color:var(--muted);font-family:var(--mono);font-size:12px;text-align:left;min-width:0}
+.cmdk:hover{border-color:var(--orange-deep);color:var(--ink)}
+.cmdk .ph{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--surface2);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--muted)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:12px}
+.live-dot{display:flex;align-items:center;gap:7px;color:var(--ok-ink);font-size:11.5px;font-weight:600}
+.live-dot .d{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px rgba(84,196,126,.7)}
+.clock{color:var(--ink);font-variant-numeric:tabular-nums}
+.clock span{color:var(--muted);font-size:10.5px}
+.shift{color:var(--muted);font-size:11.5px}
+.rail{grid-area:nav;background:var(--surface);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px}
+.rail button{position:relative;width:42px;height:42px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;border-radius:7px;color:var(--muted)}
+.rail button svg{width:18px;height:18px}
+.rail button:hover{color:var(--ink);background:var(--surface2)}
+.rail button.on{color:var(--ink);background:var(--surface2)}
+.rail button.on::before{content:"";position:absolute;left:-8px;top:10px;bottom:10px;width:2.5px;border-radius:2px;background:var(--orange)}
+.rail button::after{content:attr(data-label);position:absolute;left:52px;top:50%;transform:translateY(-50%);
+  background:var(--chip);border:1px solid var(--line);color:var(--ink);font-family:var(--sans);font-size:12px;font-weight:500;
+  padding:5px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:50}
+.rail button:hover::after{opacity:1}
+.rail .sp{flex:1}
+.main{grid-area:main;padding:12px;overflow-y:auto;min-height:0}
+.page{max-width:1180px;display:flex;flex-direction:column;gap:12px}
+.pg-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pg-head h1{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.pg-head .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.pg-head .acts{margin-left:auto;display:flex;gap:8px}
+/* tombol */
+.btn{background:var(--surface2);border:1px solid var(--line);border-radius:6px;color:var(--body);
+  font-family:var(--mono);font-size:11.5px;font-weight:600;padding:7px 12px;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:var(--orange-deep);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primer{background:var(--orange);border:1px solid var(--orange-deep);color:#161311}
+.btn-primer:hover{background:var(--orange-deep);color:#161311;border-color:var(--orange-deep)}
+.btn-danger{background:var(--err-bg);border:1px solid rgba(239,111,111,.45);color:var(--err-ink)}
+.btn-danger:hover{border-color:var(--err)}
+.btn-sm{padding:4px 9px;font-size:10.5px}
+/* strip info 4 titik (bukan krisis — tanpa solid/bold) */
+.valid{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
+  border-radius:7px;padding:10px 14px;flex-wrap:wrap}
+.valid .ico{flex:none;width:20px;height:20px;border:1.5px solid var(--info);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--info)}
+.valid .tx{font-size:12px;color:var(--body);line-height:1.5}
+.valid .tx b{color:var(--ink);font-weight:600}
+.valid .pts{margin-left:auto;display:flex;gap:14px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.valid .pts b{color:var(--info);font-weight:600;margin-right:5px}
+/* panel */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.sect-h{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sect-h h2{font-size:12.5px;font-weight:600;color:var(--ink)}
+.sect-h .cap{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.note{padding:9px 12px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line-soft);line-height:1.55}
+/* tabel */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-family:var(--sans);font-size:11px;font-weight:600;
+  color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody td{font-family:var(--mono);font-size:12px;color:var(--body);padding:0 10px;height:31px;
+  border-bottom:1px solid var(--line-soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr:hover td{background:var(--surface2)}
+tbody tr:last-child td{border-bottom:none}
+td.no{color:var(--info);font-weight:500}
+td.sans{font-family:var(--sans);font-size:12.5px}
+td.left{color:var(--warn-ink)}
+td.left.soon{color:var(--err-ink)}
+tr.flash td{animation:fls .9s ease-out}
+@keyframes fls{from{background:rgba(84,196,126,.20)}to{background:transparent}}
+/* badge */
+.bdg{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.bdg .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-suk{color:var(--ok-ink);background:var(--ok-bg)}
+.b-ggl{color:var(--err-ink);background:var(--err-bg)}
+.b-info{color:var(--info);background:rgba(139,150,240,.12)}
+/* form tambah */
+.frm{padding:12px;display:grid;grid-template-columns:200px 1fr 140px;gap:12px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:11px;font-weight:600;color:var(--muted)}
+.fld input,.fld select{height:36px;background:var(--bg);border:1px solid var(--line);border-radius:6px;
+  color:var(--body);font-family:var(--mono);font-size:12px;padding:0 10px;width:100%}
+.fld input::placeholder{color:var(--muted)}
+.fld input:focus,.fld select:focus{border-color:var(--orange-deep);outline:none}
+.fld .hint{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.fld .hint b{color:var(--ok-ink);font-weight:600}
+.chk-row{display:flex;align-items:center;gap:12px;padding:0 12px 12px;font-size:12px;color:var(--body)}
+.chk{display:inline-flex;align-items:center;gap:9px;cursor:pointer}
+.chk input{position:absolute;opacity:0;width:16px;height:16px;margin:0}
+.chk .box{flex:none;width:16px;height:16px;border:1px solid var(--line);border-radius:4px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center}
+.chk .box svg{width:10px;height:10px;opacity:0}
+.chk input:checked+.box{background:var(--orange);border-color:var(--orange-deep)}
+.chk input:checked+.box svg{opacity:1}
+.chk input:focus-visible+.box{outline:2px solid var(--orange);outline-offset:1px}
+.chk .lb{font-family:var(--sans);font-size:12.5px}
+/* modal konfirmasi */
+.ovl{position:fixed;inset:0;background:rgba(10,7,5,.62);display:none;align-items:flex-start;justify-content:center;
+  padding-top:14vh;z-index:100}
+.ovl.open{display:flex}
+.mdl{width:500px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:9px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.mdl-h{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.mdl-h h3{font-size:13px;font-weight:700;color:var(--ink);flex:1}
+.mdl-x{background:none;border:none;color:var(--muted);font-size:18px;line-height:1;padding:4px 6px;border-radius:6px}
+.mdl-x:hover{color:var(--ink);background:var(--surface2)}
+.mdl-b{padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:12.5px;line-height:1.6;color:var(--body)}
+.mdl-b .who{font-family:var(--mono);font-size:12px;color:var(--info);background:var(--bg);
+  border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.mdl-b .impact{color:var(--muted);font-size:12px}
+.mdl-f{display:flex;gap:8px;padding:13px 16px;border-top:1px solid var(--line);align-items:center}
+.mdl-f .right{margin-left:auto;display:flex;gap:8px}
+/* toast */
+.toasts{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:200}
+.toast{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--line);border-radius:7px;
+  padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-family:var(--mono);font-size:12px;color:var(--ink);
+  animation:tin .18s ease-out}
+.toast .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.toast.bad .dot{background:var(--err)}
+@keyframes tin{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+/* palet */
+.pal-ovl{position:fixed;inset:0;background:rgba(10,7,5,.62);display:none;padding-top:14vh;justify-content:center;z-index:150;align-items:flex-start}
+.pal-ovl.open{display:flex}
+.cmdk-box{width:560px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:9px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);overflow:hidden}
+.cmdk-box input{width:100%;background:none;border:none;border-bottom:1px solid var(--line);color:var(--ink);
+  font-family:var(--mono);font-size:13.5px;padding:14px 16px;outline:none}
+.cmdk-box .lst{max-height:300px;overflow-y:auto;padding:6px}
+.cmdk-box .it{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:var(--body);
+  font-size:13px;cursor:pointer;text-decoration:none}
+.cmdk-box .it:hover,.cmdk-box .it.sel{background:var(--surface2)}
+.cmdk-box .it .k{margin-left:auto}
+.cmdk-box .empty{padding:22px;text-align:center;color:var(--muted);font-size:12px;font-family:var(--mono)}
+.statusbar{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--surface);
+  border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.statusbar .sep{color:var(--line)}
+.bnav{display:none}
+@media(max-width:900px){
+  body{grid-template:"top" 46px "main" 1fr "foot" 28px/1fr}
+  .rail{display:none}
+  .main{padding:12px 12px 96px}
+  table{min-width:680px}
+  .frm{grid-template-columns:1fr}
+  .valid .pts{margin-left:0}
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:90}
+  .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);text-decoration:none;
+    font-size:10.5px;font-weight:600;min-height:48px;justify-content:center;border-radius:10px}
+  .bnav a svg{width:20px;height:20px}
+  .bnav a.on{color:var(--orange)}
+  .cmdk .ph{display:none}
+  /* F1: topbar responsif — cmdk menyusut, elemen non-esensial disembunyikan */
+  .topbar{gap:10px;padding:0 10px}
+  .cmdk{flex:1 1 auto;min-width:0}
+  .cmdk kbd{display:none}
+  .brand small{display:none}
+  .shift{display:none}
+  .top-right{gap:10px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}
+  tr.flash td{animation:none}
+  .rail button:hover::after{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="prompt">&gt;_</span> otomaX <small>sistem</small></div>
+  <button class="cmdk" id="palBtn" aria-label="Buka palet perintah"><span class="ph">Ketik perintah atau cari layar…</span><kbd>Ctrl</kbd><kbd>K</kbd></button>
+  <div class="top-right">
+    <span class="live-dot"><span class="d"></span>Live</span>
+    <span class="clock" id="clock">--:--:-- <span>WIB</span></span>
+    <span class="shift">shift malam</span>
+  </div>
+</header>
+
+<nav class="rail" aria-label="Navigasi utama">
+  <button data-label="Dashboard" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></button>
+  <button data-label="Transaksi" aria-label="Transaksi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+  <button data-label="Reseller" aria-label="Reseller"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6M16 5.5a3.2 3.2 0 0 1 0 5.8M18.5 14.7c1.4.7 2.3 1.9 2.6 3.8"/></svg></button>
+  <button data-label="Produk" aria-label="Produk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg></button>
+  <button data-label="Modul & terminal" aria-label="Modul dan terminal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="7" width="10" height="14" rx="2"/><path d="M10 18.5h4M12 3v2"/></svg></button>
+  <button data-label="Inbox" aria-label="Inbox" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>
+  <button data-label="Dompet" aria-label="Dompet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h5v-3h-5a2.5 2.5 0 0 0 0 5z"/></svg></button>
+  <div class="sp"></div>
+  <button data-label="Pengaturan" aria-label="Pengaturan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></svg></button>
+</nav>
+
+<main class="main">
+  <div class="page">
+    <div class="pg-head">
+      <div>
+        <h1>Daftar hitam</h1>
+        <div class="sub">tabel daftar_hitam · nomor ternormalisasi 62… · kadaluarsa 30 hari</div>
+      </div>
+      <div class="acts">
+        <button class="btn" id="jumpAdd"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Tambah nomor</button>
+      </div>
+    </div>
+
+    <!-- ── 4 titik validasi ── -->
+    <div class="valid" role="note" aria-label="Titik validasi nomor">
+      <span class="ico">i</span>
+      <span class="tx"><b>4 titik validasi.</b> Setiap nomor dicek ke daftar hitam di:</span>
+      <span class="pts"><span><b>1</b>registrasi</span><span><b>2</b>transaksi</span><span><b>3</b>pengirim</span><span><b>4</b>deposit</span></span>
+    </div>
+
+    <!-- ── tabel ── -->
+    <section class="panel" aria-label="Nomor daftar hitam">
+      <div class="sect-h">
+        <h2>Nomor terdaftar</h2>
+        <span class="cap" id="blCount"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table aria-label="Tabel daftar hitam">
+          <thead><tr><th>Nomor</th><th>Alasan</th><th>Fraud</th><th>Ditambahkan</th><th>Sisa</th><th>Reseller terkait</th><th style="text-align:right">Aksi</th></tr></thead>
+          <tbody id="blRows"></tbody>
+        </table>
+      </div>
+      <div class="note">Nomor <b>fraud</b> yang kena hit otomatis menonaktifkan reseller terkait (engine, tahap validasi). Nomor kedaluwarsa otomatis keluar dari daftar; aktivasi ulang manual via reseller.</div>
+    </section>
+
+    <!-- ── form tambah ── -->
+    <section class="panel" id="addPanel" aria-label="Tambah nomor ke daftar hitam">
+      <div class="sect-h"><h2>Tambah nomor</h2><span class="cap">input dinormalisasi ke 62… sebelum disimpan</span></div>
+      <div class="frm">
+        <div class="fld">
+          <label for="nNomor">Nomor</label>
+          <input id="nNomor" autocomplete="off" placeholder="08xx / +62xx / 62xx" inputmode="tel">
+          <span class="hint" id="normPrev">ketik nomor untuk preview normalisasi</span>
+        </div>
+        <div class="fld">
+          <label for="nAlasan">Alasan</label>
+          <select id="nAlasan">
+            <option value="spam promo produk">spam promo produk</option>
+            <option value="fraud tiket deposit">fraud tiket deposit</option>
+            <option value="percobaan duplikat WA">percobaan duplikat WA</option>
+            <option value="nomor daur ulang (false positive)">nomor daur ulang (false positive)</option>
+            <option value="lain-lain">lain-lain</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="nDurasi">Durasi blacklist</label>
+          <select id="nDurasi">
+            <option value="7">7 hari</option>
+            <option value="14">14 hari</option>
+            <option value="30" selected>30 hari</option>
+            <option value="60">60 hari</option>
+            <option value="90">90 hari</option>
+          </select>
+        </div>
+      </div>
+      <div class="chk-row">
+        <label class="chk"><input type="checkbox" id="nFraud">
+          <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#161311" stroke-width="3.4"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+          <span class="lb">Tandai fraud — nomor yang kena hit menonaktifkan reseller terkait otomatis</span></label>
+        <button class="btn btn-primer" id="addBl" style="margin-left:auto">Tambahkan ke daftar hitam</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ── dialog konfirmasi nonaktifkan reseller ── -->
+<div class="ovl" id="cfOvl" role="alertdialog" aria-modal="true" aria-labelledby="cfT" aria-describedby="cfD">
+  <div class="mdl">
+    <div class="mdl-h"><h3 id="cfT">Nonaktifkan reseller?</h3>
+      <button class="mdl-x" data-close aria-label="Tutup dialog">×</button></div>
+    <div class="mdl-b">
+      <div class="who" id="cfWho"></div>
+      <p id="cfD">Reseller berhenti menerima transaksi dan downline-nya ikut terhenti. Aksi ini butuh peran admin dan tercatat di audit.</p>
+      <p class="impact">Yang tidak ikut berubah: riwayat mutasi saldo, tiket deposit, dan data produk reseller ini.</p>
+    </div>
+    <div class="mdl-f"><button class="btn" data-close id="cfCancel">Batal</button>
+      <div class="right"><button class="btn btn-danger" id="cfOk">Nonaktifkan reseller</button></div></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<!-- palet -->
+<div class="pal-ovl" id="palOvl">
+  <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Palet perintah">
+    <input id="palIn" aria-label="Ketik perintah" placeholder="Ketik perintah atau cari layar…" autocomplete="off">
+    <div class="lst" id="palLst"></div>
+  </div>
+</div>
+
+<nav class="bnav" aria-label="Navigasi bawah">
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Transaksi</a>
+  <a href="#" class="on" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>Inbox</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h5v-3h-5a2.5 2.5 0 0 0 0 5z"/></svg>Dompet</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Sistem</a>
+</nav>
+
+<footer class="statusbar">
+  <span>otomaX linux · p0-sistem</span><span class="sep">|</span>
+  <span>cek_nomor() terpusat — normalisasi 62… sebelum bandingkan</span><span class="sep">|</span>
+  <span><kbd>Ctrl</kbd>+<kbd>K</kbd> palet perintah</span>
+</footer>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+function tick(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jakarta'}));
+  const p=n=>String(n).padStart(2,'0');
+  $('#clock').innerHTML=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())} <span>WIB</span>`;}
+tick();setInterval(tick,1000);
+
+function toast(msg,bad){const t=document.createElement('div');t.className='toast'+(bad?' bad':'');
+  t.innerHTML='<span class="dot"></span><span></span>';t.lastChild.textContent=msg;
+  $('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';
+    setTimeout(()=>t.remove(),260);},3000);}
+
+/* ── normalisasi: 0… / +62… / 62… → 62… ── */
+function normalize(raw){
+  let d=(raw||'').replace(/[^\d]/g,'');
+  if(d.startsWith('62'))return d;
+  if(d.startsWith('0'))return '62'+d.slice(1);
+  return d?('62'+d):'';
+}
+const nNomor=$('#nNomor'),normPrev=$('#normPrev');
+nNomor.addEventListener('input',()=>{
+  const v=nNomor.value.trim();
+  if(!v){normPrev.textContent='ketik nomor untuk preview normalisasi';return;}
+  const n=normalize(v);
+  normPrev.innerHTML=n?`→ <b>${n}</b>`:`→ <b style="color:var(--err-ink)">nomor tidak valid</b>`;
+});
+
+/* ── data ── */
+const DAY=864e5, now=Date.now();
+let rows=[
+  {nomor:'6281234567890',alasan:'spam promo produk',fraud:false,tgl:now-14*DAY,durasi:30,reseller:{kode:'OR0042',nama:'Toko Berkah',aktif:false}},
+  {nomor:'6289876543210',alasan:'nomor daur ulang (false positive)',fraud:false,tgl:now-7*DAY,durasi:30,reseller:{kode:'OR0157',nama:'Pulsa Jaya',aktif:true}},
+  {nomor:'6281122334455',alasan:'fraud tiket deposit',fraud:true,tgl:now-2*DAY,durasi:30,reseller:{kode:'OR0201',nama:'Cell Mandiri',aktif:true}},
+  {nomor:'6285551234567',alasan:'percobaan duplikat WA',fraud:false,tgl:now-16*DAY,durasi:30,reseller:null},
+];
+function sisaHari(r){return Math.max(0,Math.ceil((r.tgl+r.durasi*DAY-now)/DAY));}
+function fmtTgl(ts){return new Date(ts).toISOString().slice(0,10);}
+
+function render(){
+  const tb=$('#blRows');tb.innerHTML='';
+  rows.forEach((r,i)=>{
+    const sisa=sisaHari(r);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="no"></td>
+      <td class="sans"></td>
+      <td>${r.fraud?'<span class="bdg b-ggl" title="Fraud = nomor fraud, kena hit menonaktifkan reseller"><span class="dot"></span>Fraud</span>':'<span style="color:var(--muted)">—</span>'}</td>
+      <td>${fmtTgl(r.tgl)}</td>
+      <td class="left${sisa<=3?' soon':''}"></td>
+      <td>${r.reseller?`<span class="no" style="font-size:11.5px">${r.reseller.kode}</span> · <span class="sans" style="font-size:12px">${r.reseller.nama}</span> <span class="bdg ${r.reseller.aktif?'b-suk':'b-ggl'}" style="margin-left:6px"><span class="dot"></span>${r.reseller.aktif?'Aktif':'Nonaktif'}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:right">${r.reseller&&r.reseller.aktif
+        ?`<button class="btn btn-sm" aria-label="Nonaktifkan reseller ${r.reseller.kode}">Nonaktifkan reseller</button>`
+        :`<button class="btn btn-sm" disabled title="${r.reseller?'reseller sudah nonaktif':'tidak ada reseller terkait'}">Nonaktifkan reseller</button>`}</td>`;
+    tr.children[0].textContent=r.nomor;
+    tr.children[1].textContent=r.alasan;
+    tr.children[4].textContent=`${sisa} hari`;
+    const btn=tr.querySelector('button');
+    if(r.reseller&&r.reseller.aktif)btn.onclick=()=>confirmDeact(i);
+    tb.appendChild(tr);
+  });
+  $('#blCount').textContent=`${rows.length} nomor · ${rows.filter(r=>r.fraud).length} fraud`;
+}
+render();
+
+/* ── dialog konfirmasi destruktif: fokus default = Batal ── */
+const cfOvl=$('#cfOvl');let target=-1,lastFocus=null;
+function confirmDeact(i){
+  target=i;const r=rows[i];
+  lastFocus=document.activeElement;
+  $('#cfWho').textContent=`${r.reseller.kode} · ${r.reseller.nama}  (nomor ${r.nomor})`;
+  cfOvl.classList.add('open');
+  setTimeout(()=>$('#cfCancel').focus(),30);   /* default fokus Batal */
+}
+function closeCf(){cfOvl.classList.remove('open');target=-1;if(lastFocus)lastFocus.focus();}
+$$('#cfOvl [data-close]').forEach(b=>b.onclick=closeCf);
+cfOvl.addEventListener('click',e=>{if(e.target===cfOvl)closeCf();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cfOvl.classList.contains('open'))closeCf();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Tab'&&cfOvl.classList.contains('open')){ /* trap fokus sederhana di modal (pola wizard-modul) */
+    const f=cfOvl.querySelectorAll('button,input,select,textarea,a[href]');
+    const list=[...f].filter(el=>el.offsetParent!==null&&!el.disabled);
+    if(!list.length)return;
+    const first=list[0],last=list[list.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+});
+$('#cfOk').onclick=()=>{
+  const r=rows[target];r.reseller.aktif=false;
+  render();closeCf();toast(`Reseller ${r.reseller.kode} dinonaktifkan`);
+};
+
+/* ── tambah nomor ── */
+$('#addBl').onclick=()=>{
+  const raw=nNomor.value.trim(),n=normalize(raw);
+  if(!n||n.length<10){toast('Nomor tidak valid — cek kembali input',true);nNomor.focus();return;}
+  if(rows.some(r=>r.nomor===n)){toast('Nomor sudah ada di daftar hitam',true);return;}
+  rows.unshift({nomor:n,alasan:$('#nAlasan').value,fraud:$('#nFraud').checked,tgl:now,
+    durasi:+$('#nDurasi').value,reseller:null});
+  render();
+  const tr=$('#blRows').firstChild;tr.classList.add('flash');setTimeout(()=>tr.classList.remove('flash'),950);
+  nNomor.value='';normPrev.textContent='ketik nomor untuk preview normalisasi';$('#nFraud').checked=false;
+  toast(`Nomor ${n} masuk daftar hitam`);
+};
+$('#jumpAdd').onclick=()=>{$('#addPanel').scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>nNomor.focus(),300);};
+
+/* ── palet ── */
+const screens=[
+  {t:'Pengguna & peran',f:'pengguna-peran.html',k:'Ctrl+1'},
+  {t:'Daftar hitam',f:'daftar-hitam.html',k:'Ctrl+2'},
+  {t:'Mutasi saldo',f:'mutasi-dompet.html',k:'Ctrl+3'},
+];
+const palOvl=$('#palOvl'),palIn=$('#palIn'),palLst=$('#palLst');
+function renderPal(q=''){
+  const list=screens.filter(s=>s.t.toLowerCase().includes(q.toLowerCase()));
+  palLst.innerHTML=list.length?list.map((s,i)=>
+    `<a class="it${i===0?' sel':''}" href="${s.f}"><span>${s.t}</span><span class="k"><kbd>${s.k}</kbd></span></a>`).join('')
+    :'<div class="empty">tidak ada layar yang cocok</div>';
+}
+$('#palBtn').onclick=()=>{palOvl.classList.add('open');renderPal();palIn.value='';
+  setTimeout(()=>palIn.focus(),30);};
+palOvl.addEventListener('click',e=>{if(e.target===palOvl)palOvl.classList.remove('open');});
+palIn.addEventListener('input',()=>renderPal(palIn.value));
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palBtn').click();}
+  if(e.key==='Escape')palOvl.classList.remove('open');
+  if(palOvl.classList.contains('open')&&e.key==='Enter'){
+    const a=palLst.querySelector('.it.sel');if(a)location.href=a.getAttribute('href');}
+});
+</script>
+</body>
+</html>
