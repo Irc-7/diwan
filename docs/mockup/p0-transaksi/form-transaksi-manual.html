@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transaksi manual — otomaX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#161311;--surface:#201c18;--surface2:#262019;--line:#332c24;--line-soft:#2b251e;
+--chip:#2a241e;--ink:#f4efe8;--body:#d8d1c6;--muted:#b3aa9c;--faint:#7f776b;
+--orange:#ff8f52;--orange-deep:#e07a35;--orange-ink:#ffb98a;--orange-soft:#3d2817;
+--info:#8b96f0;--ok:#54c47e;--warn:#eeb04a;--err:#ef6f6f;
+--ok-ink:#8fdcab;--ok-bg:#183024;--warn-ink:#f2cc82;--warn-bg:#38290f;--err-ink:#f49c9c;--err-bg:#3a1c1c;
+--sans:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--body);font:400 13px/1.55 var(--sans);min-height:100vh}
+::selection{background:rgba(255,143,82,.28)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+.top{position:sticky;top:0;z-index:20;height:46px;display:flex;align-items:center;gap:10px;
+padding:0 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{font:700 14px var(--mono);color:var(--ink);white-space:nowrap}
+.brand .p{color:var(--ok-ink)}
+.crumb{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb b{color:var(--body);font-weight:600}
+.top .sp{flex:1}
+.clock{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.wrap{max-width:1020px;margin:0 auto;padding:18px 14px 96px}
+h1{font:800 24px/1.2 var(--sans);color:var(--ink);margin:6px 0 4px}
+.lede{color:var(--muted);font-size:12.5px;margin-bottom:16px;max-width:78ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:14px 16px;margin-bottom:12px}
+.sect-h h2{font:600 12.5px var(--sans);color:var(--ink);margin-bottom:2px}
+.sect-d{color:var(--muted);font-size:12px;margin-bottom:14px;max-width:80ch}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font:600 11px var(--sans);color:var(--muted)}
+.field label .req{color:var(--err-ink)}
+.field .hint{font-size:11px;color:var(--muted)}
+.hint code{font:500 11px var(--mono);color:var(--body);background:var(--chip);border-radius:4px;padding:1px 5px}
+input[type=text],input[type=number],input[type=datetime-local],select,textarea{
+background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--ink);
+font:500 11.5px var(--mono);padding:8px 10px;width:100%;font-variant-numeric:tabular-nums;color-scheme:dark}
+select{appearance:none;-webkit-appearance:none;cursor:pointer;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23b3aa9c' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+background-repeat:no-repeat;background-position:right 9px center;padding-right:32px}
+input:focus,select:focus{border-color:var(--orange-deep);outline:none}
+input::placeholder{color:var(--muted)}
+input.bad,select.bad{border-color:var(--err)}
+.ferr{display:none;font-size:11.5px;color:var(--err-ink);line-height:1.5}
+.ferr.on{display:block}
+.ferr b{font-weight:700}
+.ferr .fix{color:var(--body)}
+/* panel aturan terjadwal — elemen bold layar ini */
+.rules{background:var(--orange-soft);border:1px solid var(--line);border-left:3px solid var(--orange);
+border-radius:6px;padding:12px 14px;margin-top:12px}
+.rules h3{font:600 12.5px var(--sans);color:var(--orange-ink);margin-bottom:8px}
+.rules ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.rules li{font-size:12px;color:var(--body);display:flex;gap:8px;line-height:1.5}
+.rules li::before{content:"—";color:var(--orange);flex:none}
+.rules li code{font:500 11px var(--mono);color:var(--orange-ink);background:rgba(0,0,0,.25);
+border-radius:4px;padding:1px 5px}
+/* pratinjau status */
+.preview{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;
+background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.preview .pl{font:600 11px var(--sans);color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;font:700 10.5px var(--mono);
+letter-spacing:.05em;padding:3px 8px;border-radius:4px}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-prc{color:var(--warn-ink);background:var(--warn-bg)}
+.b-inf{color:var(--info);background:rgba(139,150,240,.14)}
+.b-prc .dot{animation:denyut 1.2s ease-in-out infinite}
+@keyframes denyut{0%,100%{opacity:1}50%{opacity:.25}}
+.preview .pnote{font:500 11.5px var(--mono);color:var(--muted)}
+.btnrow{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+button{font-family:var(--sans);cursor:pointer;border-radius:6px}
+.btn-p{background:var(--orange);color:var(--bg);border:none;font:600 12.5px var(--sans);padding:9px 18px}
+.btn-p:hover{background:var(--orange-deep)}
+.btn-p:disabled{background:var(--chip);color:var(--faint);cursor:not-allowed}
+.btn-g{background:var(--surface);color:var(--body);border:1px solid var(--line);
+font:600 12.5px var(--sans);padding:9px 16px}
+.btn-g:hover{border-color:var(--orange-deep)}
+@media(max-width:900px){.fgrid{grid-template-columns:1fr}.wrap{padding-bottom:96px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s!important;
+animation-iteration-count:1!important;transition-duration:.001s!important}.b-prc .dot{animation:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand" aria-label="otomaX"><span class="p">&gt;_</span> otomaX</div>
+  <div class="crumb">Transaksi <b>/ Buat manual</b></div>
+  <div class="sp"></div>
+  <div class="clock" id="clock" aria-label="Jam WIB">--:--:--</div>
+</header>
+
+<main class="wrap">
+  <h1>Transaksi manual</h1>
+  <p class="lede">Buat transaksi langsung dari konsol operator. Isi <code style="font:500 11px var(--mono);color:var(--body)">tgl_jadwal</code>
+  bila transaksi harus jalan nanti — kosongkan untuk diproses sekarang.</p>
+
+  <section class="panel" aria-labelledby="dt">
+    <div class="sect-h"><h2 id="dt">Data transaksi</h2></div>
+    <p class="sect-d">Melewati jalur yang sama dengan SMS masuk: parsing → validasi → routing → saldo dipotong.</p>
+    <div class="fgrid">
+      <div class="field full">
+        <label for="perintah">Perintah <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="perintah" placeholder="cth. TLKM50.081234567890.1" autocomplete="off" aria-describedby="e-perintah">
+        <p class="hint">Format: <code>KODE.TUJUAN.QTY</code> — sama persis seperti SMS dari reseller.</p>
+        <p class="ferr" id="e-perintah"><b>Perintah tidak lengkap.</b> Minimal berisi kode dan tujuan —
+        <span class="fix">contoh: <code>TLKM50.081234567890</code>.</span></p>
+      </div>
+      <div class="field">
+        <label for="produk">Produk <span class="req" aria-hidden="true">*</span></label>
+        <select id="produk">
+          <option value="">— Pilih produk —</option>
+          <option>TLKM50 · Telkomsel 50rb</option>
+          <option>IND100 · Indosat 100rb</option>
+          <option>XL25 · XL 25rb</option>
+          <option>PLN20 · Token PLN 20rb</option>
+          <option>BPJSKES · BPJS Kesehatan</option>
+        </select>
+        <p class="ferr" id="e-produk"><b>Produk belum dipilih.</b> <span class="fix">Pilih satu produk dari daftar.</span></p>
+      </div>
+      <div class="field">
+        <label for="tujuan">Tujuan <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="tujuan" placeholder="cth. 081234567890" autocomplete="off" aria-describedby="e-tujuan">
+        <p class="ferr" id="e-tujuan"><b>Tujuan tidak valid.</b> Isi nomor/ID pelanggan —
+        <span class="fix">harus lolos filter tujuan produk bila ada.</span></p>
+      </div>
+      <div class="field">
+        <label for="reseller">Reseller <span class="req" aria-hidden="true">*</span></label>
+        <select id="reseller">
+          <option value="">— Pilih reseller —</option>
+          <option>RS001 · Toko Berkah Cell</option>
+          <option>RS014 · Agen Maju Jaya</option>
+          <option>RS027 · Konter Sinar</option>
+        </select>
+        <p class="ferr" id="e-reseller"><b>Reseller belum dipilih.</b> <span class="fix">Saldo yang dipotong mengikuti reseller ini.</span></p>
+      </div>
+      <div class="field">
+        <label for="qty">Qty</label>
+        <input type="number" id="qty" value="1" min="1" aria-describedby="h-qty">
+        <p class="hint" id="h-qty">Produk postpaid tanpa daftar qty → dipaksa 1.</p>
+      </div>
+      <div class="field">
+        <label for="prioritas">Prioritas</label>
+        <select id="prioritas">
+          <option>Normal</option>
+          <option>Tinggi — dahulukan di antrean</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label for="jadwal">Tgl jadwal (opsional)</label>
+        <input type="datetime-local" id="jadwal" aria-describedby="e-jadwal">
+        <p class="ferr" id="e-jadwal"><b>Jadwal sudah lewat.</b> Isi waktu di masa depan —
+        <span class="fix">atau kosongkan untuk diproses sekarang.</span></p>
+      </div>
+    </div>
+
+    <div class="rules" aria-label="Aturan Terjadwal">
+      <h3>Aturan Terjadwal</h3>
+      <ul>
+        <li>Dijalankan saat waktunya tiba — Scheduler mengambil baris <code>status = Terjadwal</code> dan
+        <code>tgl_jadwal ≤ sekarang</code>, lalu masuk pipeline normal.</li>
+        <li>Dikecualikan dari hitungan "dalam proses" di monitor — antrean operasional hanya menghitung
+        status di bawah 20 selain Terjadwal dan Suspect.</li>
+        <li><code>tgl_jadwal</code> wajib terisi — tanpa itu transaksi masuk antrean normal, bukan Terjadwal.</li>
+      </ul>
+    </div>
+
+    <div class="preview" aria-live="polite">
+      <span class="pl">Status awal:</span>
+      <span class="badge b-prc" id="bPrev" title="PRC = Diproses"><span class="dot"></span>BelumDiproses</span>
+      <span class="pnote" id="pNote">masuk antrean normal, dihitung dalam proses</span>
+    </div>
+  </section>
+
+  <div class="btnrow">
+    <button type="button" class="btn-g" id="btnBatal">Batal</button>
+    <button type="button" class="btn-p" id="btnBuat" disabled>Buat transaksi</button>
+  </div>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+function tick(){try{$("clock").textContent=new Date().toLocaleTimeString("id-ID",{timeZone:"Asia/Jakarta",hour12:false})+" WIB"}catch(e){}}
+tick();setInterval(tick,1000);
+
+function valid(){
+  var ok=true;
+  function set(id,eid,good){$(eid).classList.toggle("on",!good);$(id).classList.toggle("bad",!good);if(!good)ok=false}
+  var p=$("perintah").value.trim();
+  set("perintah","e-perintah",p.length>0&&p.indexOf(".")>-1);
+  set("produk","e-produk",$("produk").value!=="");
+  set("tujuan","e-tujuan",$("tujuan").value.trim().length>=3);
+  set("reseller","e-reseller",$("reseller").value!=="");
+  var j=$("jadwal").value,bPrev=$("bPrev"),pNote=$("pNote");
+  if(j===""){
+    bPrev.className="badge b-prc";bPrev.title="PRC = Diproses";
+    bPrev.innerHTML='<span class="dot"></span>BelumDiproses';
+    pNote.textContent="masuk antrean normal, dihitung dalam proses";
+    set("jadwal","e-jadwal",true);
+  }else{
+    var t=new Date(j).getTime(),now=Date.now();
+    if(t<=now){set("jadwal","e-jadwal",false)}
+    else{
+      set("jadwal","e-jadwal",true);
+      bPrev.className="badge b-inf";bPrev.title="Terjadwal — dieksekusi saat tgl_jadwal tiba";
+      bPrev.innerHTML='<span class="dot"></span>Terjadwal';
+      var d=new Date(j);
+      pNote.textContent="dieksekusi "+d.toLocaleString("id-ID",{timeZone:"Asia/Jakarta",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+" WIB · tidak dihitung dalam proses";
+    }
+  }
+  $("btnBuat").disabled=!ok;
+  return ok;
+}
+["perintah","tujuan","qty","jadwal"].forEach(function(id){$(id).addEventListener("input",valid)});
+["produk","reseller","prioritas"].forEach(function(id){$(id).addEventListener("change",valid)});
+$("btnBatal").addEventListener("click",function(){history.back()});
+$("btnBuat").addEventListener("click",function(){
+  if(!valid())return;
+  var b=$("btnBuat");b.disabled=true;b.textContent="Membuat…";
+  setTimeout(function(){
+    b.textContent=$("jadwal").value===""?"Transaksi dibuat":"Transaksi dijadwalkan";
+    setTimeout(function(){b.textContent="Buat transaksi";valid()},1600);
+  },700);
+});
+valid();
+})();
+</script>
+</body>
+</html>
