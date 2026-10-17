@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrasi jawaban — OtomaX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161311; --surface:#201c18; --surface2:#262019; --line:#332c24; --line-soft:#2b251e;
+  --chip:#2a241e; --ink:#f4efe8; --body:#d8d1c6; --muted:#b3aa9c;
+  --orange:#ff8f52; --orange-deep:#e07a35; --orange-ink:#ffb98a; --orange-soft:#3d2817;
+  --info:#8b96f0;
+  --ok-ink:#8fdcab; --ok-bg:#183024; --ok:#54c47e;
+  --warn-ink:#f2cc82; --warn-bg:#38290f;
+  --err-ink:#f49c9c; --err-bg:#3a1c1c; --err:#ef6f6f;
+  --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--body);font:400 13px/1.5 var(--sans);min-height:100vh}
+::selection{background:rgba(255,143,82,.28)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+/* ---------- top ---------- */
+.top{display:flex;align-items:baseline;gap:14px;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.top h1{font:800 24px var(--sans);color:var(--ink);margin:0}
+.top .sub{font:400 11.5px var(--sans);color:var(--muted)}
+.top .legend{margin-left:auto;font:400 10.5px var(--mono);color:var(--muted);white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font:700 10.5px var(--mono);letter-spacing:.05em;
+  padding:3px 8px;border-radius:4px}
+.badge .d{width:6px;height:6px;border-radius:999px;background:currentColor}
+.b-ok{background:var(--ok-bg);color:var(--ok-ink)}
+.b-warn{background:var(--warn-bg);color:var(--warn-ink)}
+.b-err{background:var(--err-bg);color:var(--err-ink)}
+.b-info{background:var(--orange-soft);color:var(--orange-ink)}
+/* ---------- bench ---------- */
+.bench{display:grid;grid-template-columns:308px minmax(0,1fr) 372px;gap:12px;padding:12px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:7px}
+.sect-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.sect-h h2{font:600 12.5px var(--sans);color:var(--ink);margin:0}
+.sect-h .cnt{font:600 10.5px var(--mono);color:var(--muted)}
+.sect-b{padding:10px 12px}
+/* katalog */
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 0}
+.chip{border-radius:999px;padding:4px 10px;font:500 11px var(--mono);background:var(--chip);color:var(--muted);
+  border:1px solid var(--line-soft);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--orange-soft);color:var(--orange-ink);border-color:var(--orange-deep)}
+.chip .n{font-variant-numeric:tabular-nums}
+.plist{list-style:none;margin:8px 0 0;padding:0;max-height:560px;overflow-y:auto}
+.plist li{border-top:1px solid var(--line-soft)}
+.prow{width:100%;text-align:left;background:none;border:0;padding:8px 12px;cursor:pointer;display:block;min-height:31px}
+.prow:hover{background:var(--surface2)}
+.prow .l1{display:flex;align-items:baseline;gap:8px}
+.prow .nm{font:600 12px var(--mono);color:var(--ink)}
+.prow .nm .al{color:var(--info);font-weight:500}
+.prow .ex{margin-left:auto;font:400 11px var(--mono);color:var(--muted);white-space:nowrap}
+.prow .ds{font:400 11px var(--sans);color:var(--muted);margin-top:2px}
+.prow .ds .tag{font:700 9.5px var(--mono);letter-spacing:.04em;padding:1px 5px;border-radius:3px;margin-right:6px}
+.tag.b{background:var(--ok-bg);color:var(--ok-ink)}
+.tag.r{background:var(--warn-bg);color:var(--warn-ink)}
+.ghead{font:600 11px var(--sans);color:var(--muted);padding:10px 12px 2px}
+/* editor */
+textarea.inp,input.inp{background:var(--bg);border:1px solid var(--line);border-radius:6px;
+  font:400 12px/1.7 var(--mono);color:var(--ink);padding:8px 10px;width:100%}
+input.inp{font:400 11.5px var(--mono);padding:7px 10px}
+.inp::placeholder{color:var(--muted)}
+.inp:focus{border-color:var(--orange-deep);outline:none}
+textarea.inp{resize:vertical}
+.lbl{font:600 11px var(--sans);color:var(--muted);display:block;margin:0 0 4px}
+.hint{font:400 11px var(--sans);color:var(--muted);margin-top:6px}
+.hint code{font-family:var(--mono);color:var(--info);font-size:10.5px}
+/* pola rows */
+.prow2{display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:8px;align-items:center;
+  padding:7px 0;border-top:1px solid var(--line-soft);min-height:31px}
+.prow2:first-child{border-top:0}
+.prow2 .pn{font:600 11.5px var(--mono);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow2 .pp{font:400 11.5px var(--mono);color:var(--info);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow2 .pp.bad{color:var(--err-ink)}
+.prow2 .acts{display:flex;gap:4px}
+.ibtn{background:var(--surface2);border:1px solid var(--line);border-radius:6px;color:var(--muted);
+  width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+.ibtn:hover{color:var(--ink);border-color:var(--orange-deep)}
+.ibtn.danger:hover{color:var(--err-ink);border-color:var(--err)}
+.pedit{display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:8px;padding:7px 0;border-top:1px solid var(--line-soft)}
+.padd{display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:8px;padding-top:10px;align-items:end}
+/* test panel */
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-top:8px}
+.kv dt{font:600 11px var(--mono);color:var(--info);padding:7px 10px;border-bottom:1px solid var(--line-soft);background:var(--bg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kv dd{font:400 12px var(--mono);color:var(--ink);padding:7px 10px;margin:0;border-bottom:1px solid var(--line-soft);word-break:break-word}
+.kv dt:last-of-type,.kv dd:last-of-type{border-bottom:0}
+.kv .miss{color:var(--muted);font-style:italic}
+.preview{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:12px;
+  font:400 12.5px/1.8 var(--sans);color:var(--body);margin-top:8px;white-space:pre-wrap}
+.preview .ph{font-family:var(--mono);font-size:11.5px;background:var(--ok-bg);color:var(--ok-ink);
+  padding:1px 5px;border-radius:3px}
+.preview .ph.miss{background:var(--warn-bg);color:var(--warn-ink)}
+.misslist{margin:8px 0 0;padding-left:18px;font:400 11.5px var(--sans);color:var(--warn-ink)}
+/* buttons */
+.btn{border-radius:6px;font:600 12px var(--sans);padding:8px 16px;cursor:pointer;border:1px solid transparent}
+.btn-ghost{background:var(--surface2);border-color:var(--line);color:var(--body)}
+.btn-ghost:hover{border-color:var(--orange-deep);color:var(--ink)}
+.btn-primary{background:var(--orange);color:var(--bg)}
+.btn-primary:hover{background:var(--orange-deep)}
+.btn-sm{padding:6px 12px;font-size:11.5px}
+.rowb{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.sp{flex:1}
+.empty{padding:18px 12px;text-align:center;color:var(--muted);font:400 12px var(--sans)}
+/* confirm */
+.cfm{position:fixed;inset:0;background:rgba(10,7,5,.62);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.cfm.open{display:flex}
+.cfm .box{background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 24px 70px rgba(0,0,0,.6);
+  width:440px;max-width:100%;padding:18px}
+.cfm h2{font:700 13px var(--sans);color:var(--ink);margin:0 0 8px}
+.cfm p{font:400 12.5px var(--sans);color:var(--body);margin:0 0 16px}
+.cfm p code{font-family:var(--mono);color:var(--info)}
+.cfm .row{display:flex;justify-content:flex-end;gap:10px}
+.btn-danger{background:var(--err-bg);color:var(--err-ink);border-color:rgba(239,111,111,.45)}
+@media (max-width:1180px){.bench{grid-template-columns:280px minmax(0,1fr)}.tpanel{grid-column:1/-1}}
+@media (max-width:860px){
+  .bench{grid-template-columns:minmax(0,1fr)}
+  .top{flex-wrap:wrap}.top .legend{margin-left:0}
+  .plist{max-height:320px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>Administrasi jawaban</h1>
+  <span class="sub">Katalog placeholder, template balasan, PolaParam regex, dan panel uji — satu meja kerja.</span>
+  <span class="legend">SUK = Sukses, PRC = Diproses, GGL = Gagal</span>
+</header>
+
+<main class="bench">
+  <!-- ============ KATALOG ============ -->
+  <section class="panel" aria-labelledby="hCat">
+    <div class="sect-h"><h2 id="hCat">Katalog placeholder</h2><span class="cnt" id="catCnt"></span></div>
+    <div class="sect-b" style="padding-bottom:0">
+      <label class="lbl" for="catQ">Cari placeholder</label>
+      <input class="inp" id="catQ" type="search" placeholder="mis. saldo, sn, bank…" aria-label="Cari placeholder">
+    </div>
+    <div class="chips" role="group" aria-label="Filter grup placeholder" id="catChips"></div>
+    <ul class="plist" id="catList"></ul>
+    <div class="sect-b"><p class="hint" style="margin:0">Klik placeholder untuk menyisipkan <code>[nama]</code> ke editor yang terakhir disentuh.</p></div>
+  </section>
+
+  <!-- ============ EDITOR ============ -->
+  <section aria-label="Editor">
+    <div class="panel" style="margin-bottom:12px">
+      <div class="sect-h"><h2 id="hTpl">Template balasan</h2><span class="sp"></span>
+        <span class="badge b-ok" title="Substitusi dievaluasi ReplyDispatch tepat sebelum balasan dikirim"><span class="d"></span>Live saat dispatch</span>
+      </div>
+      <div class="sect-b">
+        <label class="lbl" for="tpl">Isi balasan</label>
+        <textarea class="inp" id="tpl" rows="5">Transaksi [kodeproduk] ke [tujuan] SUKSES. SN [nomorseri]. Saldo [saldo].</textarea>
+        <p class="hint">Substitusi dievaluasi <code>ReplyDispatch</code> tepat sebelum balasan dikirim — <code>[saldo]</code> = saldo terakhir saat membalas, bukan saat transaksi dibuat. Baris baru dinormalisasi (<code>\r\n</code>) saat disimpan.</p>
+        <div class="rowb">
+          <button class="btn btn-ghost btn-sm" id="btnGotoTest">Uji template ini</button>
+          <span class="sp"></span>
+          <button class="btn btn-primary btn-sm" id="btnSaveTpl">Simpan balasan</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="sect-h"><h2 id="hPola">PolaParam — regex penangkap jawaban supplier</h2><span class="cnt" id="polaCnt"></span></div>
+      <div class="sect-b">
+        <div id="polaList"></div>
+        <div class="padd">
+          <div><label class="lbl" for="pNama">Nama</label><input class="inp" id="pNama" placeholder="PolaParam30"></div>
+          <div><label class="lbl" for="pPola">Pola regex</label><input class="inp" id="pPola" placeholder="(?&lt;saldo&gt;[\d\.]+)"></div>
+          <div><button class="btn btn-ghost btn-sm" id="btnAddPola">Tambah</button></div>
+        </div>
+        <p class="hint" id="polaErr" style="color:var(--err-ink)" hidden></p>
+        <p class="hint">Regex dievaluasi dua kali: <code>(a)</code> saat jawaban supplier tiba — menangkap parameter; <code>(b)</code> placeholder balasan saat <code>ReplyDispatch</code>. Pakai named group <code>(?&lt;nama&gt;…)</code> agar tertangkap dengan nama yang sama dengan placeholder.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ UJI ============ -->
+  <aside class="panel tpanel" aria-labelledby="hTest">
+    <div class="sect-h"><h2 id="hTest">Uji</h2><span class="sp"></span>
+      <span class="badge b-info" title="Tanpa reload — hasil dihitung ulang setiap ada perubahan"><span class="d"></span>Live</span>
+    </div>
+    <div class="sect-b">
+      <label class="lbl" for="sample">Contoh jawaban supplier</label>
+      <textarea class="inp" id="sample" rows="4">SUKSES. SN: 8834120091. Saldo Rp 1.245.000.</textarea>
+      <div class="rowb">
+        <button class="btn btn-primary btn-sm" id="btnTest">Uji</button>
+        <button class="btn btn-ghost btn-sm" id="btnSample2">Contoh lain</button>
+      </div>
+      <h2 style="font:600 12.5px var(--sans);color:var(--ink);margin:16px 0 0">Parameter tertangkap</h2>
+      <div id="capOut"><p class="empty">Belum ada hasil — tempel jawaban lalu tekan Uji.</p></div>
+      <h2 style="font:600 12.5px var(--sans);color:var(--ink);margin:16px 0 0">Preview balasan</h2>
+      <div class="preview" id="prevOut" aria-live="polite">—</div>
+      <ul class="misslist" id="missOut" hidden></ul>
+    </div>
+  </aside>
+</main>
+
+<div class="cfm" id="cfm" role="dialog" aria-modal="true" aria-labelledby="cfmT">
+  <div class="box">
+    <h2 id="cfmT">Hapus pola?</h2>
+    <p id="cfmP"></p>
+    <div class="row">
+      <button class="btn btn-ghost" id="cfmCancel">Batal</button>
+      <button class="btn btn-danger" id="cfmOk">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== katalog: 27 [B] + 9 [R] + 3 WebSMSSender (arch_engine.md §4.1) ===== */
+const KNOWN=[
+ {n:['trxcount'],ex:'1.204',d:'Total transaksi hari ini; tidak menghitung transaksi itu sendiri.'},
+ {n:['sumofqty'],ex:'38',d:'Jumlah qty hari ini.'},
+ {n:['qty'],ex:'2',d:'Qty transaksi — dipakai balasan LaporanTransaksi, CekTransaksiAkhir.'},
+ {n:['pin'],ex:'••••',d:'PIN reseller; format UbahPin wajib memakainya agar PIN lama ikut dicek.'},
+ {n:['pinbaru'],ex:'••••',d:'PIN baru (format UbahPin/ResetPin).'},
+ {n:['saldo'],ex:'Rp 1.250.000',d:'Saldo terakhir saat sistem membalas.'},
+ {n:['saldoawal'],ex:'Rp 1.260.000',d:'Saldo saat transaksi terinput (= kolom transaksi.saldo_awal).'},
+ {n:['saldolama'],ex:'Rp 1.260.000',d:'Saldo lama (renderer struk NotaBill.prt).'},
+ {n:['waktu'],ex:'17/10/2026',d:'Tanggal hari ini.'},
+ {n:['date','time'],ex:'17/10/2026',d:'Tanggal / jam (renderer struk).'},
+ {n:['bank'],ex:'BCA',d:'Bank tiket deposit; tiket hanya di-settle modul bank yang sesuai.'},
+ {n:['refid','trxid'],ex:'TX88412',d:'ID transaksi (alias).'},
+ {n:['kodereseller'],ex:'OR0001',d:'Kode reseller.'},
+ {n:['namareseller'],ex:'DANI',d:'Nama reseller.'},
+ {n:['kodeproduk'],ex:'VSTID45',d:'Kode produk.'},
+ {n:['tujuan'],ex:'081234567890',d:'Nomor tujuan.'},
+ {n:['keterangan','description'],ex:'Sukses',d:'Keterangan pada reply status (modul OH).'},
+ {n:['markup'],ex:'Rp 200',d:'Markup.'},
+ {n:['markuptotal'],ex:'Rp 750',d:'Total markup = markup reseller + semua markup upline, pada balasan transaksi.'},
+ {n:['selisih'],ex:'Rp 150',d:'Selisih harga.'},
+ {n:['tagihan','bill'],ex:'Rp 52.300',d:'Tagihan postpaid yang tertangkap dari jawaban supplier.'},
+ {n:['nomorseri'],ex:'8834120091',d:'Nomor seri voucher.'},
+ {n:['jumlah'],ex:'Rp 100.000',d:'Jumlah (uang).'},
+ {n:['kode','nama'],ex:'VSTID45',d:'Kode / nama generik (struk).'},
+ {n:['format'],ex:'S.0812',d:'Format yang gagal (balasan FormatSalah).'},
+ {n:['pesan'],ex:'Isi pesan…',d:'Pesan (kiriman Forward CS).'},
+ {n:['pengirim'],ex:'081298765432',d:'Pengirim (CS Monitor; pesan non-member bisa kosong).'},
+];
+const NEED_VERIFY=[
+ {n:['ver_combo'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['combo'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['aktif2'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['oldip'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['enduser'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['memberid'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['kodereferral'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['nomorhp'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary.'},
+ {n:['sign'],d:'Terdeteksi di Version.txt — makna belum terverifikasi dari binary. [I] dugaan dari bukti: signature verifikasi IM Center (ada status WrongSignature).'},
+];
+const WEBSMS=[
+ {n:['to'],ex:'+6281234567890',d:'Varian nomor tujuan khusus template URL WebSMSSender: dengan +.'},
+ {n:['to2'],ex:'6281234567890',d:'Varian nomor tujuan khusus template URL WebSMSSender: 62….'},
+ {n:['to3'],ex:'081234567890',d:'Varian nomor tujuan khusus template URL WebSMSSender: tanpa kode negara.'},
+];
+const GROUPS=[
+ {id:'all',t:'Semua'},
+ {id:'b',t:'Terkonfirmasi',n:KNOWN.length},
+ {id:'r',t:'Perlu verifikasi',n:NEED_VERIFY.length},
+ {id:'w',t:'WebSMSSender',n:WEBSMS.length},
+];
+const $=id=>document.getElementById(id);
+let curGroup='all',lastEditor=$('tpl');
+
+/* contoh nilai untuk preview: captured > katalog */
+const contohMap={};
+KNOWN.forEach(k=>k.n.forEach(nm=>contohMap[nm]=k.ex));
+WEBSMS.forEach(k=>k.n.forEach(nm=>contohMap[nm]=k.ex));
+
+/* ===== katalog render ===== */
+function rowHTML(item,tagCls,tagTxt){
+  const names=item.n.map((nm,i)=>i?'<span class="al"> / ['+nm+']</span>':'['+nm+']').join('');
+  return '<li><button type="button" class="prow" data-names="'+item.n.join(',')+'" title="Sisipkan ['+item.n[0]+']">'+
+    '<span class="l1"><span class="nm">'+names+'</span>'+
+    (item.ex?'<span class="ex">'+item.ex.replace(/</g,'&lt;')+'</span>':'')+'</span>'+
+    '<span class="ds"><span class="tag '+tagCls+'">'+tagTxt+'</span>'+item.d.replace(/</g,'&lt;')+'</span>'+
+    '</button></li>';
+}
+function renderCat(){
+  const q=$('catQ').value.trim().toLowerCase();
+  const match=it=>!q||it.n.join(' ').includes(q)||it.d.toLowerCase().includes(q)||(it.ex||'').toLowerCase().includes(q);
+  let html='',count=0;
+  const secs=[];
+  if(curGroup==='all'||curGroup==='b')secs.push(['Terkonfirmasi [B] — dari Version.txt & NotaBill.prt',KNOWN,'b','B']);
+  if(curGroup==='all'||curGroup==='w')secs.push(['Variabel template URL WebSMSSender',WEBSMS,'b','B']);
+  if(curGroup==='all'||curGroup==='r')secs.push(['Perlu verifikasi [R] — jangan karang maknanya',NEED_VERIFY,'r','R']);
+  secs.forEach(([head,items,tc,tt])=>{
+    const rows=items.filter(match);
+    if(!rows.length)return;
+    html+='<li class="ghead" aria-hidden="true" style="list-style:none">'+head+'</li>'+
+      rows.map(it=>{count++;return rowHTML(it,tc,tt);}).join('');
+  });
+  $('catList').innerHTML=html||'<li class="empty" style="list-style:none">Tidak ada placeholder yang cocok.</li>';
+  $('catCnt').textContent=count+' item';
+  $('catList').querySelectorAll('.prow').forEach(b=>b.addEventListener('click',()=>{
+    const name=b.dataset.names.split(',')[0];
+    insertAtCursor(lastEditor,'['+name+']');
+  }));
+}
+function renderChips(){
+  $('catChips').innerHTML=GROUPS.map(g=>
+    '<button type="button" class="chip" data-g="'+g.id+'" aria-pressed="'+(curGroup===g.id)+'">'+g.t+
+    (g.n!==undefined?' <span class="n">('+g.n+')</span>':'')+'</button>').join('');
+  $('catChips').querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+    curGroup=c.dataset.g;renderChips();renderCat();
+  }));
+}
+function insertAtCursor(el,text){
+  el.focus();
+  const s=el.selectionStart||0,e=el.selectionEnd||0,v=el.value;
+  el.value=v.slice(0,s)+text+v.slice(e);
+  el.selectionStart=el.selectionEnd=s+text.length;
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
+['tpl','sample'].forEach(id=>$(id).addEventListener('focusin',()=>{lastEditor=$(id);}));
+$('catQ').addEventListener('input',renderCat);
+
+/* ===== PolaParam ===== */
+let pola=[
+ {nama:'PolaParam0',pola:'SN[:\\s]+(?<nomorseri>\\S+)'},
+ {nama:'PolaParam20',pola:'Saldo\\s*(?:Rp\\.?)?\\s*(?<saldo>[\\d\\.]+)'},
+];
+let editIdx=-1,delIdx=-1;
+function polaOK(p){try{new RegExp(p);return true;}catch(e){return false;}}
+function renderPola(){
+  $('polaCnt').textContent=pola.length+' pola';
+  if(editIdx>=0){
+    const p=pola[editIdx];
+    $('polaList').innerHTML='<div class="pedit">'+
+      '<input class="inp" id="peNama" value="'+p.nama.replace(/"/g,'&quot;')+'" aria-label="Nama pola">'+
+      '<input class="inp" id="pePola" value="'+p.pola.replace(/"/g,'&quot;').replace(/</g,'&lt;')+'" aria-label="Pola regex">'+
+      '<span style="display:flex;gap:4px"><button class="btn btn-primary btn-sm" id="peSave">Simpan</button>'+
+      '<button class="btn btn-ghost btn-sm" id="peCancel">Batal</button></span></div>';
+    $('peSave').addEventListener('click',()=>{
+      const nm=$('peNama').value.trim(),pl=$('pePola').value;
+      if(!nm||!pl||!polaOK(pl)){$('polaErr').hidden=false;$('polaErr').textContent='Nama dan pola regex yang valid wajib diisi.';return;}
+      if(pola.some((x,i)=>i!==editIdx&&x.nama===nm)){$('polaErr').hidden=false;$('polaErr').textContent='Nama pola sudah dipakai.';return;}
+      $('polaErr').hidden=true;pola[editIdx]={nama:nm,pola:pl};editIdx=-1;renderPola();runTest();
+    });
+    $('peCancel').addEventListener('click',()=>{editIdx=-1;$('polaErr').hidden=true;renderPola();});
+    return;
+  }
+  $('polaList').innerHTML=pola.map((p,i)=>{
+    const ok=polaOK(p.pola);
+    return '<div class="prow2"><span class="pn" title="'+p.nama.replace(/"/g,'&quot;')+'">'+p.nama.replace(/</g,'&lt;')+'</span>'+
+      '<span class="pp'+(ok?'':' bad')+'" title="'+p.pola.replace(/"/g,'&quot;')+'">'+p.pola.replace(/</g,'&lt;')+(ok?'':' — regex tidak valid')+'</span>'+
+      '<span class="acts"><button class="ibtn" data-e="'+i+'" aria-label="Ubah pola '+p.nama+'">✎</button>'+
+      '<button class="ibtn danger" data-d="'+i+'" aria-label="Hapus pola '+p.nama+'">🗑</button></span></div>';
+  }).join('')||'<p class="empty">Belum ada pola. Tambahkan di bawah.</p>';
+  $('polaList').querySelectorAll('[data-e]').forEach(b=>b.addEventListener('click',()=>{editIdx=+b.dataset.e;renderPola();}));
+  $('polaList').querySelectorAll('[data-d]').forEach(b=>b.addEventListener('click',()=>{
+    delIdx=+b.dataset.d;
+    $('cfmP').innerHTML='Hapus <code>'+pola[delIdx].nama.replace(/</g,'&lt;')+'</code>? Pola tidak dipakai lagi saat jawaban supplier tiba. Tidak bisa dibatalkan.';
+    $('cfm').classList.add('open');$('cfmCancel').focus();
+  }));
+}
+$('btnAddPola').addEventListener('click',()=>{
+  const nm=$('pNama').value.trim(),pl=$('pPola').value;
+  if(!nm||!pl||!polaOK(pl)){$('polaErr').hidden=false;$('polaErr').textContent=!polaOK(pl)&&pl?'Pola regex tidak valid — periksa sintaks.':'Nama dan pola regex wajib diisi.';return;}
+  if(pola.some(x=>x.nama===nm)){$('polaErr').hidden=false;$('polaErr').textContent='Nama pola sudah dipakai.';return;}
+  $('polaErr').hidden=true;pola.push({nama:nm,pola:pl});
+  $('pNama').value='';$('pPola').value='';renderPola();runTest();
+});
+$('cfmCancel').addEventListener('click',()=>$('cfm').classList.remove('open'));
+$('cfmOk').addEventListener('click',()=>{
+  if(delIdx>=0)pola.splice(delIdx,1);
+  delIdx=-1;$('cfm').classList.remove('open');renderPola();runTest();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&$('cfm').classList.contains('open'))$('cfm').classList.remove('open');
+});
+
+/* ===== uji ===== */
+function esc(s){return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function runTest(){
+  const sample=$('sample').value, tpl=$('tpl').value;
+  const captured={},rows=[];
+  pola.forEach(p=>{
+    if(!polaOK(p.pola)){rows.push({pola:p.nama,miss:'regex tidak valid — dilewati'});return;}
+    let m;try{m=new RegExp(p.pola,'i').exec(sample);}catch(e){m=null;}
+    if(!m){rows.push({pola:p.nama,miss:'tidak cocok'});return;}
+    const g=m.groups||{};
+    Object.keys(g).forEach(k=>{if(g[k]!==undefined){captured[k]=g[k];rows.push({pola:p.nama,param:k,val:g[k]});}});
+    for(let i=1;i<m.length;i++){
+      if(m[i]!==undefined&&!Object.values(g).includes(m[i])){
+        const k=p.nama.toLowerCase()+'_'+i;captured[k]=m[i];rows.push({pola:p.nama,param:k,val:m[i]});
+      }
+    }
+    if(!Object.keys(g).length&&m.length<=1)rows.push({pola:p.nama,miss:'cocok tapi tidak ada grup tangkap'});
+  });
+  /* tabel parameter */
+  const hit=rows.filter(r=>r.val!==undefined);
+  $('capOut').innerHTML=hit.length?
+    '<dl class="kv">'+hit.map(r=>'<dt title="'+esc(r.pola)+'">'+esc(r.param)+'</dt><dd>'+esc(r.val)+
+      ' <span style="color:var(--muted)">← '+esc(r.pola)+'</span></dd>').join('')+'</dl>'+
+      (rows.some(r=>r.miss)?'<p class="hint">'+rows.filter(r=>r.miss).map(r=>esc(r.pola)+': '+esc(r.miss)).join(' · ')+'</p>':'')
+    :'<p class="empty">Tidak ada parameter tertangkap — periksa pola atau contoh jawaban.</p>';
+  /* preview substitusi */
+  const missing=[];
+  const out=esc(tpl).replace(/\[([a-zA-Z0-9_]+)\]/g,(full,nm)=>{
+    const key=nm.toLowerCase();
+    const capKey=Object.keys(captured).find(k=>k.toLowerCase()===key);
+    if(capKey)return '<span class="ph">'+esc(captured[capKey])+'</span>';
+    if(contohMap[key]!==undefined)return '<span class="ph">'+esc(contohMap[key])+'</span>';
+    missing.push('['+nm+']');return '<span class="ph miss">'+full+'</span>';
+  });
+  $('prevOut').innerHTML=out||'—';
+  const mu=$('missOut');
+  if(missing.length){mu.hidden=false;mu.innerHTML='<li>Placeholder tak terisi (tidak ada di katalog maupun tangkapan): '+[...new Set(missing)].map(esc).join(', ')+'</li>';}
+  else mu.hidden=true;
+}
+let tmr=null;
+function runTestSoon(){clearTimeout(tmr);tmr=setTimeout(runTest,250);}
+$('btnTest').addEventListener('click',runTest);
+['sample','tpl'].forEach(id=>$(id).addEventListener('input',runTestSoon));
+$('btnSample2').addEventListener('click',()=>{
+  $('sample').value='GAGAL. Saldo tidak cukup Rp 45.000. Refid TX90210.';
+  runTest();$('sample').focus();
+});
+$('btnGotoTest').addEventListener('click',()=>{
+  document.querySelector('.tpanel').scrollIntoView({block:'start',behavior:'smooth'});
+  $('sample').focus();runTest();
+});
+$('btnSaveTpl').addEventListener('click',()=>{
+  const b=$('btnSaveTpl');b.textContent='Tersimpan ✓';
+  setTimeout(()=>{b.textContent='Simpan balasan';},1600);
+});
+
+/* init */
+renderChips();renderCat();renderPola();runTest();
+</script>
+</body>
+</html>
