@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tambah produk — otomaX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#161311;--surface:#201c18;--surface2:#262019;--line:#332c24;--line-soft:#2b251e;
+--chip:#2a241e;--ink:#f4efe8;--body:#d8d1c6;--muted:#b3aa9c;--faint:#7f776b;
+--orange:#ff8f52;--orange-deep:#e07a35;--orange-ink:#ffb98a;--orange-soft:#3d2817;
+--info:#8b96f0;--ok:#54c47e;--warn:#eeb04a;--err:#ef6f6f;
+--ok-ink:#8fdcab;--ok-bg:#183024;--warn-ink:#f2cc82;--warn-bg:#38290f;--err-ink:#f49c9c;--err-bg:#3a1c1c;
+--sans:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--body);font:400 13px/1.55 var(--sans);min-height:100vh}
+::selection{background:rgba(255,143,82,.28)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+/* shell */
+.top{position:sticky;top:0;z-index:20;height:46px;display:flex;align-items:center;gap:10px;
+padding:0 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{font:700 14px var(--mono);color:var(--ink);white-space:nowrap}
+.brand .p{color:var(--ok-ink)}
+.crumb{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb b{color:var(--body);font-weight:600}
+.top .sp{flex:1}
+.clock{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+/* konten */
+.wrap{max-width:1020px;margin:0 auto;padding:18px 14px 96px}
+h1{font:800 24px/1.2 var(--sans);color:var(--ink);margin:6px 0 4px}
+.lede{color:var(--muted);font-size:12.5px;margin-bottom:16px;max-width:78ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:14px 16px;margin-bottom:12px}
+.sect-h{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+.sect-h h2{font:600 12.5px var(--sans);color:var(--ink)}
+.sect-h .tag{font:700 10.5px var(--mono);letter-spacing:.05em;color:var(--orange-ink);
+background:var(--orange-soft);border-radius:4px;padding:2px 7px}
+.sect-d{color:var(--muted);font-size:12px;margin:2px 0 14px;max-width:80ch}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font:600 11px var(--sans);color:var(--muted)}
+.field label .req{color:var(--err-ink)}
+.field .hint{font-size:11px;color:var(--muted)}
+.hint code,.note code{font:500 11px var(--mono);color:var(--body);background:var(--chip);
+border-radius:4px;padding:1px 5px}
+input[type=text],input[type=number],input[type=datetime-local],select,textarea{
+background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--ink);
+font:500 11.5px var(--mono);padding:8px 10px;width:100%;font-variant-numeric:tabular-nums}
+select{appearance:none;-webkit-appearance:none;cursor:pointer;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23b3aa9c' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+background-repeat:no-repeat;background-position:right 9px center;padding-right:32px}
+input:focus,select:focus,textarea:focus{border-color:var(--orange-deep);outline:none}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+input.bad,textarea.bad,select.bad{border-color:var(--err)}
+textarea{min-height:66px;resize:vertical;line-height:1.6}
+.ferr{display:none;font-size:11.5px;color:var(--err-ink);line-height:1.5}
+.ferr.on{display:block}
+.ferr b{font-weight:700}
+.ferr .fix{color:var(--body)}
+/* strip konsol evaluasi — elemen bold layar ini */
+.console{background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--orange);
+border-radius:6px;padding:10px 12px;margin-top:10px}
+.console .cl{font:600 11px var(--sans);color:var(--muted);margin-bottom:8px}
+.trial{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.trial .field{min-width:120px;flex:1}
+.result{font:500 12px var(--mono);color:var(--body);font-variant-numeric:tabular-nums;line-height:1.7}
+.result .subst{color:var(--muted)}
+.result .val{color:var(--ok-ink);font-weight:700}
+.result.err .val{color:var(--err-ink)}
+.result.note .val{color:var(--info);font-weight:600}
+.note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.6}
+.note b{color:var(--body);font-weight:600}
+/* badge uji regex */
+.badge{display:inline-flex;align-items:center;gap:6px;font:700 10.5px var(--mono);
+letter-spacing:.05em;padding:3px 8px;border-radius:4px}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-suk{color:var(--ok-ink);background:var(--ok-bg)}
+.b-ggl{color:var(--err-ink);background:var(--err-bg)}
+.b-inf{color:var(--info);background:rgba(139,150,240,.14)}
+.rowtest{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
+.rowtest .field{flex:1;min-width:160px}
+.rowtest .field.grow2{flex:1.6}
+.btnrow{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+button{font-family:var(--sans);cursor:pointer;border-radius:6px}
+.btn-p{background:var(--orange);color:var(--bg);border:none;font:600 12.5px var(--sans);padding:9px 18px}
+.btn-p:hover{background:var(--orange-deep)}
+.btn-p:disabled{background:var(--chip);color:var(--faint);cursor:not-allowed}
+.btn-s{background:var(--surface2);color:var(--body);border:1px solid var(--line);
+font:600 11.5px var(--mono);padding:7px 12px}
+.btn-s:hover{border-color:var(--orange-deep)}
+.btn-g{background:var(--surface);color:var(--body);border:1px solid var(--line);
+font:600 12.5px var(--sans);padding:9px 16px}
+.btn-g:hover{border-color:var(--orange-deep)}
+@media(max-width:900px){.fgrid{grid-template-columns:1fr}.wrap{padding-bottom:96px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s!important;
+animation-iteration-count:1!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand" aria-label="otomaX"><span class="p">&gt;_</span> otomaX</div>
+  <div class="crumb">Produk <b>/ Tambah produk</b></div>
+  <div class="sp"></div>
+  <div class="clock" id="clock" aria-label="Jam WIB">--:--:--</div>
+</header>
+
+<main class="wrap">
+  <h1>Tambah produk</h1>
+  <p class="lede">Produk baru masuk daftar dengan status aktif. Tiga bagian mekanika di bawah menentukan
+  cara harga dihitung, tujuan yang diterima, dan qty yang boleh lewat — diuji langsung sebelum disimpan.</p>
+
+  <section class="panel" aria-labelledby="dp">
+    <div class="sect-h"><h2 id="dp">Data produk</h2></div>
+    <p class="sect-d">Identitas katalog yang dipakai parsing perintah dan balasan ke reseller.</p>
+    <div class="fgrid">
+      <div class="field">
+        <label for="kode">Kode produk <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="kode" placeholder="cth. TLKM50" autocomplete="off" aria-describedby="e-kode">
+        <p class="ferr" id="e-kode"><b>Kode kosong.</b> Isi kode unik, huruf/angka tanpa spasi — <span class="fix">dipakai di perintah SMS reseller.</span></p>
+      </div>
+      <div class="field">
+        <label for="nama">Nama produk <span class="req" aria-hidden="true">*</span></label>
+        <input type="text" id="nama" placeholder="cth. Telkomsel 50rb" autocomplete="off" aria-describedby="e-nama">
+        <p class="ferr" id="e-nama"><b>Nama kosong.</b> Isi nama yang dikenali reseller — <span class="fix">muncul di balasan dan laporan.</span></p>
+      </div>
+      <div class="field">
+        <label for="operator">Operator</label>
+        <select id="operator">
+          <option>Telkomsel</option><option>Indosat</option><option>XL Axiata</option>
+          <option>Tri</option><option>Smartfren</option><option>PLN</option><option>Multifinance</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="tipe">Tipe produk</label>
+        <select id="tipe" aria-describedby="h-tipe">
+          <option value="prepaid">Prepaid (pulsa/kuota)</option>
+          <option value="postpaid">Postpaid (pascabayar)</option>
+        </select>
+        <p class="hint" id="h-tipe">Tipe postpaid mengaktifkan aturan qty khusus di bawah.</p>
+      </div>
+      <div class="field">
+        <label for="nominal">Nominal <span class="req" aria-hidden="true">*</span></label>
+        <input type="number" id="nominalP" value="50" min="0" step="1" aria-describedby="e-nominalP">
+        <p class="hint">Dalam ribu rupiah — <code>50</code> berarti Rp50.000.</p>
+        <p class="ferr" id="e-nominalP"><b>Nominal tidak valid.</b> Isi angka ≥ 0 — <span class="fix">dipakai variabel <code>Nominal</code> di rumus.</span></p>
+      </div>
+      <div class="field">
+        <label for="hbeli">Harga beli (Rp)</label>
+        <input type="number" id="hbeli" value="48500" min="0" step="100">
+      </div>
+      <div class="field">
+        <label for="hjual">Harga jual default (Rp)</label>
+        <input type="number" id="hjual" value="51000" min="0" step="100" aria-describedby="e-hjual">
+        <p class="ferr" id="e-hjual"><b>Harga jual di bawah harga beli.</b> Margin negatif — <span class="fix">naikkan harga jual atau turunkan harga beli.</span></p>
+      </div>
+      <div class="field">
+        <label for="ket">Keterangan</label>
+        <input type="text" id="ket" placeholder="Opsional — catatan internal" autocomplete="off">
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="mk">
+    <div class="sect-h"><h2 id="mk">Mekanika harga</h2><span class="tag">P0</span></div>
+    <p class="sect-d">Dievaluasi engine sebelum saldo dipotong. Urutan: harga beli → rumus → markup level → harga jual final.</p>
+
+    <div class="field full" style="margin-bottom:14px">
+      <label for="rumus">Rumus harga <span class="req" aria-hidden="true">*</span></label>
+      <textarea id="rumus" spellcheck="false" aria-describedby="e-rumus">(Qty*Nominal*1000)+HrgMarkup</textarea>
+      <p class="hint">Variabel yang dikenali: <code>Qty</code>, <code>Nominal</code>, <code>HrgMarkup</code>.
+      Isi <code>0</code> = pakai harga jual default · <code>2</code> = bebas nominal/qty.</p>
+      <p class="ferr" id="e-rumus"><b>Rumus tidak bisa dihitung.</b> <span id="e-rumus-msg">Periksa kurung dan operator.</span>
+      — <span class="fix">hanya angka, + − × ÷, kurung, dan tiga variabel di atas.</span></p>
+      <div class="console" aria-live="polite">
+        <div class="cl">Uji langsung — ganti nilai contoh, hasil dihitung saat itu juga</div>
+        <div class="trial">
+          <div class="field"><label for="tQty">Qty</label><input type="number" id="tQty" value="1" min="1"></div>
+          <div class="field"><label for="tNom">Nominal (ribu)</label><input type="number" id="tNom" value="50" min="0"></div>
+          <div class="field"><label for="tMrk">HrgMarkup (Rp)</label><input type="number" id="tMrk" value="1500" min="0"></div>
+        </div>
+        <div class="result" id="rOut"><span class="subst"></span><br>Harga jual: <span class="val"></span></div>
+        <p class="note"><b>Catatan komisi:</b> komisi reseller dihitung dari harga hasil rumus ini, bukan harga jual mentah.</p>
+      </div>
+    </div>
+
+    <div class="field full" style="margin-bottom:14px">
+      <label for="regex">Filter tujuan (RegEx)</label>
+      <input type="text" id="regex" value="^08\d{9,12}$" spellcheck="false" autocomplete="off" aria-describedby="e-regex h-regex">
+      <p class="hint" id="h-regex">Diuji saat validasi tujuan, setelah parsing format dan sebelum routing.
+      Gagal → status <code>TujuanSalah</code> / <code>TujuanDiluarWilayah</code>.</p>
+      <p class="ferr" id="e-regex"><b>Pola regex tidak valid.</b> <span id="e-regex-msg"></span>
+      — <span class="fix">perbaiki sintaks, contoh: <code>^08\d{9,12}$</code>.</span></p>
+      <div class="rowtest">
+        <div class="field"><label for="tNum">Nomor uji</label><input type="text" id="tNum" value="081234567890" autocomplete="off"></div>
+        <div><button type="button" class="btn-s" id="btnUji">Uji regex</button></div>
+        <div><span class="badge b-inf" id="bUji" title="Hasil uji regex"><span class="dot"></span>Belum diuji</span></div>
+      </div>
+    </div>
+
+    <div class="field full">
+      <label for="qtyok">Qty yang diizinkan</label>
+      <input type="text" id="qtyok" value="1,2,5,10,25,50,100" autocomplete="off" aria-describedby="e-qtyok h-qtyok">
+      <p class="hint" id="h-qtyok">Daftar angka dipisah koma. Di luar daftar → status <code>QtyTidakSesuai</code>.</p>
+      <p class="ferr" id="e-qtyok"><b>Format qty salah.</b> Isi angka bulat dipisah koma, cth. <code>1,2,5</code>
+      — <span class="fix">kosongkan bila tidak ada batasan khusus.</span></p>
+      <p class="note"><b>Aturan postpaid:</b> produk postpaid tanpa isian ini dan qty &gt; 1 → qty dipaksa menjadi 1
+      saat transaksi dibuat (aturan 4.2.9). Qty masih bisa berubah lewat tangkapan jawaban.</p>
+    </div>
+  </section>
+
+  <div class="btnrow">
+    <button type="button" class="btn-g" id="btnBatal">Batal</button>
+    <button type="button" class="btn-p" id="btnSimpan" disabled>Simpan produk</button>
+  </div>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+var rp=function(n){return "Rp"+new Intl.NumberFormat("id-ID").format(Math.round(n))};
+function tick(){try{$("clock").textContent=new Date().toLocaleTimeString("id-ID",{timeZone:"Asia/Jakarta",hour12:false})+" WIB"}catch(e){}}
+tick();setInterval(tick,1000);
+
+/* --- evaluasi rumus, aman: whitelist karakter setelah substitusi --- */
+function evalRumus(src,qty,nom,mrk){
+  var s=String(src).trim();
+  if(s==="0")return{mode:"default"};
+  if(s==="2")return{mode:"bebas"};
+  s=s.replace(/\bQty\b/g,qty).replace(/\bNominal\b/g,nom).replace(/\bHrgMarkup\b/g,mrk);
+  if(!/^[0-9+\-*/().\s]+$/.test(s)||/[A-Za-z]/.test(s))
+    return{mode:"err",msg:"karakter asing di luar Qty, Nominal, HrgMarkup, angka, dan operator."};
+  var v;
+  try{v=Function('"use strict";return ('+s+")")()}catch(e){return{mode:"err",msg:"sintaks rumus salah — periksa kurung dan operator."}}
+  if(typeof v!=="number"||!isFinite(v))return{mode:"err",msg:"hasil bukan angka hingga."};
+  return{mode:"ok",value:v,expr:s};
+}
+function renderRumus(){
+  var r=evalRumus($("rumus").value,+$("tQty").value||0,+$("tNom").value||0,+$("tMrk").value||0);
+  var out=$("rOut"),bad=$("e-rumus");
+  out.className="result";
+  if(r.mode==="ok"){
+    out.innerHTML='<span class="subst">'+r.expr.replace(/</g,"&lt;")+" =</span><br>Harga jual: "+'<span class="val">'+rp(r.value)+"</span>";
+    bad.classList.remove("on");$("rumus").classList.remove("bad");
+  }else if(r.mode==="default"){
+    out.classList.add("note");
+    out.innerHTML='Harga jual: <span class="val">pakai harga jual default (rumus = 0)</span>';
+    bad.classList.remove("on");$("rumus").classList.remove("bad");
+  }else if(r.mode==="bebas"){
+    out.classList.add("note");
+    out.innerHTML='Harga jual: <span class="val">bebas nominal/qty (rumus = 2)</span>';
+    bad.classList.remove("on");$("rumus").classList.remove("bad");
+  }else{
+    out.classList.add("err");
+    out.innerHTML='Harga jual: <span class="val">tidak bisa dihitung</span>';
+    $("e-rumus-msg").textContent=r.msg;
+    bad.classList.add("on");$("rumus").classList.add("bad");
+  }
+}
+/* --- uji regex --- */
+function ujiRegex(){
+  var pat=$("regex").value,b=$("bUji"),bad=$("e-regex");
+  b.className="badge b-inf";b.innerHTML='<span class="dot"></span>Belum diuji';
+  var re;
+  try{re=new RegExp(pat)}catch(e){
+    $("e-regex-msg").textContent=e.message;
+    bad.classList.add("on");$("regex").classList.add("bad");return false;
+  }
+  bad.classList.remove("on");$("regex").classList.remove("bad");
+  var ok=re.test($("tNum").value.trim());
+  b.className="badge "+(ok?"b-suk":"b-ggl");
+  b.title=ok?"Nomor cocok dengan pola":"Nomor tidak cocok dengan pola";
+  b.innerHTML='<span class="dot"></span>'+(ok?"Cocok":"Tidak cocok");
+  return true;
+}
+/* --- validasi form --- */
+function valid(){
+  var ok=true;
+  function set(id,eid,good){var e=$(eid);e.classList.toggle("on",!good);$(id).classList.toggle("bad",!good);if(!good)ok=false}
+  var kode=$("kode").value.trim();
+  set("kode","e-kode",kode.length>0&&/^[A-Za-z0-9._-]+$/.test(kode));
+  set("nama","e-nama",$("nama").value.trim().length>0);
+  set("nominalP","e-nominalP",+$("nominalP").value>=0&&$("nominalP").value!=="");
+  var hb=+$("hbeli").value||0,hj=+$("hjual").value||0;
+  set("hjual","e-hjual",hj>=hb);
+  var r=evalRumus($("rumus").value,1,50,0);
+  set("rumus","e-rumus",r.mode!=="err");
+  if(r.mode==="err")$("e-rumus-msg").textContent=r.msg;
+  var q=$("qtyok").value.trim();
+  set("qtyok","e-qtyok",q===""||/^(\d+\s*,\s*)*\d+$/.test(q));
+  var pat=$("regex").value;
+  try{if(pat)new RegExp(pat);set("regex","e-regex",true)}catch(e){
+    $("e-regex-msg").textContent=e.message;set("regex","e-regex",false)}
+  $("btnSimpan").disabled=!ok;
+  return ok;
+}
+["kode","nama","nominalP","hbeli","hjual","qtyok","regex"].forEach(function(id){
+  $(id).addEventListener("input",valid);
+});
+["rumus","tQty","tNom","tMrk"].forEach(function(id){
+  $(id).addEventListener("input",function(){renderRumus();valid()});
+});
+$("tNum").addEventListener("input",ujiRegex);
+$("btnUji").addEventListener("click",ujiRegex);
+$("tipe").addEventListener("change",valid);
+$("btnBatal").addEventListener("click",function(){history.back()});
+$("btnSimpan").addEventListener("click",function(){
+  if(!valid())return;
+  $("btnSimpan").disabled=true;$("btnSimpan").textContent="Menyimpan…";
+  setTimeout(function(){$("btnSimpan").textContent="Produk tersimpan";
+    setTimeout(function(){$("btnSimpan").textContent="Simpan produk";valid()},1400)},700);
+});
+renderRumus();valid();
+})();
+</script>
+</body>
+</html>
