@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tambah modul — OtomaX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161311; --surface:#201c18; --surface2:#262019; --line:#332c24; --line-soft:#2b251e;
+  --chip:#2a241e; --ink:#f4efe8; --body:#d8d1c6; --muted:#b3aa9c;
+  --orange:#ff8f52; --orange-deep:#e07a35; --orange-ink:#ffb98a; --orange-soft:#3d2817;
+  --info:#8b96f0;
+  --ok-ink:#8fdcab; --ok-bg:#183024; --ok:#54c47e;
+  --warn-ink:#f2cc82; --warn-bg:#38290f;
+  --err-ink:#f49c9c; --err-bg:#3a1c1c; --err:#ef6f6f;
+  --sans:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--body);font:400 13px/1.5 var(--sans);
+  min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px}
+::selection{background:rgba(255,143,82,.28)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+/* ---------- overlay + modal (§4.10) ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,7,5,.62);display:flex;align-items:flex-start;
+  justify-content:center;padding:28px 16px;overflow-y:auto}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:9px;width:880px;max-width:100%;
+  box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.m-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.m-head h1{font:700 13px var(--sans);color:var(--ink);margin:0}
+.m-step{font:500 11px var(--mono);color:var(--muted);margin-left:auto}
+.m-x{background:none;border:0;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:6px}
+.m-x:hover{color:var(--ink);background:var(--surface2)}
+/* ---------- stepper ---------- */
+.stepper{display:flex;gap:6px;padding:14px 18px 0}
+.stp{flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line-soft);
+  border-radius:6px;background:var(--bg)}
+.stp .n{width:22px;height:22px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+  font:700 11px var(--mono);background:var(--surface2);color:var(--muted);flex:0 0 auto}
+.stp .t{font:600 11.5px var(--sans);color:var(--muted)}
+.stp.done .n{background:var(--ok-bg);color:var(--ok-ink)}
+.stp.done .t{color:var(--body)}
+.stp.cur{border-color:var(--orange-deep)}
+.stp.cur .n{background:var(--orange);color:var(--bg)}
+.stp.cur .t{color:var(--ink)}
+/* ---------- body ---------- */
+.m-body{padding:18px;min-height:380px;max-height:62vh;overflow-y:auto}
+.m-body h2{font:600 12.5px var(--sans);color:var(--ink);margin:0 0 4px}
+.m-sub{font:400 11.5px var(--sans);color:var(--muted);margin:0 0 14px}
+/* type cards */
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tcard{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:10px 12px;cursor:pointer;color:var(--body)}
+.tcard:hover{border-color:var(--orange-deep)}
+.tcard[aria-checked="true"]{border-color:var(--orange);background:var(--orange-soft)}
+.tcard .tn{font:600 12.5px var(--mono);color:var(--ink);display:block}
+.tcard[aria-checked="true"] .tn{color:var(--orange-ink)}
+.tcard .tr{font:400 11.5px var(--sans);color:var(--muted);display:block;margin-top:2px}
+.tcard .tk{font:400 10.5px var(--mono);color:var(--info);display:block;margin-top:6px;opacity:.85}
+/* form */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld.full{grid-column:1/-1}
+.lbl{font:600 11px var(--sans);color:var(--muted)}
+.lbl .req{color:var(--err-ink)}
+.inp,select.inp,textarea.inp{background:var(--bg);border:1px solid var(--line);border-radius:6px;
+  font:400 11.5px var(--mono);color:var(--ink);padding:7px 10px;width:100%}
+textarea.inp{font-family:var(--mono);min-height:64px;resize:vertical;line-height:1.6}
+.inp::placeholder{color:var(--muted)}
+.inp:focus{border-color:var(--orange-deep);outline:none}
+.inp.bad{border-color:var(--err)}
+.hint{font:400 11px var(--sans);color:var(--muted)}
+.hint code{font-family:var(--mono);color:var(--info);font-size:10.5px}
+.ferr{font:500 11px var(--sans);color:var(--err-ink)}
+.esum{background:var(--err-bg);border:1px solid rgba(239,111,111,.45);border-radius:7px;padding:10px 12px;margin-bottom:14px}
+.esum .t{font:700 12px var(--sans);color:var(--err-ink);margin:0 0 4px}
+.esum ul{margin:0;padding-left:18px;font:400 11.5px var(--sans);color:var(--body)}
+.esum a{color:var(--err-ink)}
+.sect{margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line-soft)}
+.sect:first-child{margin-top:0;padding-top:0;border-top:0}
+/* toggle (§4.14) */
+.trow{display:flex;align-items:center;gap:10px}
+.tgl{position:relative;width:36px;height:20px;border-radius:999px;background:var(--line);border:0;cursor:pointer;flex:0 0 auto;padding:0}
+.tgl::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:999px;background:#fff;transition:left .12s}
+.tgl[aria-checked="true"]{background:var(--ok)}
+.tgl[aria-checked="true"]::after{left:18px}
+.tstate{font:500 11px var(--mono);color:var(--muted)}
+/* review */
+.rev{display:grid;grid-template-columns:180px 1fr;gap:0;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.rev dt{font:600 11px var(--sans);color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--line-soft);background:var(--bg)}
+.rev dd{font:400 12px var(--mono);color:var(--ink);padding:8px 12px;margin:0;border-bottom:1px solid var(--line-soft);word-break:break-word}
+.rev dt:last-of-type,.rev dd:last-of-type{border-bottom:0}
+pre.json{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:12px 14px;
+  font:400 11.5px/1.7 var(--mono);color:var(--info);overflow-x:auto;margin:12px 0 0;white-space:pre}
+/* success */
+.okbox{text-align:center;padding:48px 20px}
+.okdot{width:44px;height:44px;border-radius:999px;background:var(--ok-bg);color:var(--ok-ink);
+  display:inline-flex;align-items:center;justify-content:center;font:700 20px var(--mono);margin-bottom:12px}
+.okbox h2{margin:0 0 6px}
+.okbox p{color:var(--muted);margin:0 0 4px}
+/* ---------- footer ---------- */
+.m-foot{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
+.typechip{font:600 11px var(--mono);color:var(--orange-ink);background:var(--orange-soft);
+  border:1px solid var(--orange-deep);border-radius:4px;padding:3px 8px}
+.typechip.none{color:var(--muted);background:var(--chip);border-color:var(--line)}
+.sp{flex:1}
+.btn{border-radius:6px;font:600 12px var(--sans);padding:8px 16px;cursor:pointer;border:1px solid transparent}
+.btn-ghost{background:var(--surface2);border-color:var(--line);color:var(--body)}
+.btn-ghost:hover{border-color:var(--orange-deep);color:var(--ink)}
+.btn-primary{background:var(--orange);color:var(--bg)}
+.btn-primary:hover{background:var(--orange-deep)}
+.btn-primary:disabled{background:var(--surface2);color:var(--muted);border-color:var(--line);cursor:not-allowed}
+.btn-danger{background:var(--err-bg);color:var(--err-ink);border-color:rgba(239,111,111,.45)}
+/* confirm dialog */
+.cfm{position:fixed;inset:0;background:rgba(10,7,5,.62);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.cfm.open{display:flex}
+.cfm .box{background:var(--surface);border:1px solid var(--line);border-radius:9px;box-shadow:0 24px 70px rgba(0,0,0,.6);
+  width:420px;max-width:100%;padding:18px}
+.cfm h2{font:700 13px var(--sans);color:var(--ink);margin:0 0 8px}
+.cfm p{font:400 12.5px var(--sans);color:var(--body);margin:0 0 16px}
+.cfm .row{display:flex;justify-content:flex-end;gap:10px}
+@media (max-width:760px){
+  .tgrid{grid-template-columns:1fr 1fr}
+  .fgrid{grid-template-columns:1fr}
+  .rev{grid-template-columns:1fr}
+  .rev dt{border-bottom:0;padding-bottom:0}
+  body,.overlay{padding:12px 8px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal">
+    <div class="m-head">
+      <h1 id="mTitle">Tambah modul</h1>
+      <span class="m-step" id="stepLabel">Langkah 1 dari 3</span>
+      <button class="m-x" id="btnX" aria-label="Tutup wizard tambah modul">×</button>
+    </div>
+    <div class="stepper" id="stepper" aria-hidden="true"></div>
+    <div class="m-body" id="mBody"></div>
+    <div class="m-foot">
+      <span class="typechip none" id="typeChip">Tipe: —</span>
+      <span class="sp"></span>
+      <button class="btn btn-ghost" id="btnBack">Kembali</button>
+      <button class="btn btn-primary" id="btnNext">Lanjut</button>
+    </div>
+  </div>
+</div>
+
+<div class="cfm" id="cfm" role="dialog" aria-modal="true" aria-labelledby="cfmT">
+  <div class="box">
+    <h2 id="cfmT">Tutup wizard?</h2>
+    <p>Perubahan yang belum disimpan akan hilang.</p>
+    <div class="row">
+      <button class="btn btn-ghost" id="cfmCancel">Batal</button>
+      <button class="btn btn-danger" id="cfmOk">Tutup wizard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== data: 15 TipeModul (arch_db.md §2.5) ===== */
+const TYPES=[
+ {id:'Fisik',role:'Modul stok dan admin voucher fisik — bukan modem.',keys:[]},
+ {id:'SMSSender',role:'Kirim SMS lewat modem, dengan regex pengecualian pesan.',keys:['message_regex_exclusion','auto_off_on_fail']},
+ {id:'_GsmUssd',role:'Perintah USSD lewat modem GSM.',keys:['ussd_timeout']},
+ {id:'Dial',role:'Panggilan suara lewat modem voice.',keys:['dial_prefix','voice_modem']},
+ {id:'SMS',role:'Kanal SMS generik lewat modem.',keys:['message_regex_exclusion','auto_off_on_fail']},
+ {id:'Keypad',role:'Input keypad / dial manual.',keys:[]},
+ {id:'IM',role:'Instant messaging, dengan pengecualian server.',keys:['server_exclusion']},
+ {id:'SMSCenter',role:'SMSC lewat perintah AT serial.',keys:['init_string','sms_mode','sms_expiry']},
+ {id:'STK',role:'SIM ToolKit — menu proaktif SIM.',keys:['stk_menu_path','proactive_timeout']},
+ {id:'WebSMSSender',role:'Kirim SMS lewat HTTP dengan template URL.',keys:['url_template','http_timeout','params']},
+ {id:'IP',role:'Kanal IP/HTTP — jeda per transaksi, URL report.',keys:['http_timeout','http_url_report','pause_per_trx']},
+ {id:'SpecialHth',role:'Kanal khusus HTH — peta parameter balasan.',keys:['allow_empty_parsing','reply_param_map']},
+ {id:'OH',role:'Kanal OH — pola seperti SpecialHth.',keys:['allow_empty_parsing','reply_param_map']},
+ {id:'ApiSiDompul',role:'API supplier SiDompul.',keys:['endpoint','username','password_ref','nomor_sender_supplier','terima_jawaban_dari_ip_center']},
+ {id:'ApiAxis',role:'API supplier Axis.',keys:['endpoint','username','password_ref']},
+];
+const SPECIAL={
+ message_regex_exclusion:{label:'Regex pengecualian pesan',type:'text',hint:'Pesan yang cocok pola ini tidak diproses.'},
+ auto_off_on_fail:{label:'Matikan otomatis saat gagal',type:'toggle',def:true,hint:'Modul nonaktif sendiri bila gagal beruntun.'},
+ ussd_timeout:{label:'Batas waktu USSD',type:'number',def:30,min:1,suffix:'detik'},
+ dial_prefix:{label:'Prefix dial',type:'text'},
+ voice_modem:{label:'Modem voice',type:'toggle',def:true},
+ server_exclusion:{label:'Pengecualian server',type:'text',hint:'Server IM yang dikecualikan.'},
+ init_string:{label:'Init string',type:'text',hint:'Perintah AT inisialisasi, mis. <code>ATZ</code>.'},
+ sms_mode:{label:'Mode SMS',type:'select',options:['text','pdu'],def:'text'},
+ sms_expiry:{label:'Masa berlaku SMS',type:'number',def:72,min:1,suffix:'jam'},
+ stk_menu_path:{label:'Jalur menu STK',type:'text'},
+ proactive_timeout:{label:'Batas waktu proaktif',type:'number',def:60,min:1,suffix:'detik'},
+ url_template:{label:'Template URL',type:'text',req:1,hint:'Contoh: <code>https://sms.example/kirim?to=[to]&amp;msg=[msg]</code> — tersedia <code>[to]</code>, <code>[to2]</code>, <code>[to3]</code>, <code>[kodereseller]</code>.'},
+ http_timeout:{label:'Batas waktu HTTP',type:'number',def:30,min:1,suffix:'detik'},
+ params:{label:'Parameter URL',type:'text',hint:'Daftar dipisah koma: <code>to, to2, to3, [kodereseller], [namareseller]</code>.'},
+ http_url_report:{label:'URL report HTTP',type:'text'},
+ pause_per_trx:{label:'Jeda per transaksi',type:'number',def:0,min:0,suffix:'detik'},
+ allow_empty_parsing:{label:'Izinkan parsing kosong',type:'toggle',def:true},
+ reply_param_map:{label:'Peta parameter balasan',type:'text',hint:'Contoh: <code>keterangan → description</code>.'},
+ endpoint:{label:'Endpoint API',type:'text',req:1},
+ username:{label:'Username',type:'text'},
+ password_ref:{label:'Referensi kata sandi',type:'text',hint:'Isi <code>vault://…</code> — jangan tulis plaintext di sini.'},
+ nomor_sender_supplier:{label:'Nomor sender supplier',type:'text'},
+ terima_jawaban_dari_ip_center:{label:'Terima jawaban dari IP center',type:'toggle',def:false},
+};
+const COMMON=[
+ {key:'kode',label:'Kode modul',type:'number',req:1,hint:'Angka unik modul — dipakai cek stok dan relasi transaksi.'},
+ {key:'nama',label:'Nama modul',type:'text',req:1,uitext:1,hint:'Label tampil di monitor, mis. M5-SMSCenter.'},
+ {key:'aktif',label:'Modul aktif',type:'toggle',def:true,hint:'Hanya modul aktif yang menerima antrean.'},
+ {key:'parameter_parsing',label:'Parameter parsing',type:'textarea',hint:'Regex penangkap harga beli / saldo / SN — sampai 8000 karakter.'},
+ {key:'parameter_parsing2',label:'Parameter parsing 2',type:'textarea',hint:'Sama seperti parsing, tersimpan terenkripsi.'},
+ {key:'batas_antrian',label:'Batas antrean',type:'number',def:32000,min:0,max:32000,hint:'Maksimal 32000.'},
+ {key:'jam_aktif_awal',label:'Jam aktif — awal',type:'time',hint:'Awal boleh lebih besar dari akhir (lewat tengah malam).'},
+ {key:'jam_aktif_akhir',label:'Jam aktif — akhir',type:'time'},
+ {key:'filter_qty',label:'Filter qty',type:'text'},
+ {key:'filter_regex_tujuan',label:'Filter regex tujuan',type:'text'},
+ {key:'simbol_desimal',label:'Simbol desimal',type:'text',def:',',uitext:1,hint:'Mis. koma untuk format rupiah.'},
+ {key:'saldo_warning',label:'Peringatan saldo',type:'number',min:0,hint:'Batas bawah saldo modul di monitor.'},
+ {key:'update_harga_parsing',label:'Update harga dari jawaban',type:'toggle',def:true,hint:'Harga parsing diperbarui dari jawaban supplier.'},
+ {key:'auto_resend_interval',label:'Interval kirim ulang otomatis',type:'number',def:10,min:10,suffix:'detik',hint:'Minimal 10 detik.'},
+ {key:'catatan',label:'Catatan',type:'textarea',uitext:1},
+];
+/* ===== state ===== */
+const state={step:1,type:null,vals:{},dirty:false,saved:false};
+const $=id=>document.getElementById(id);
+const bodyEl=$('mBody'),stepperEl=$('stepper'),stepLabel=$('stepLabel'),
+      btnBack=$('btnBack'),btnNext=$('btnNext'),typeChip=$('typeChip');
+const STEPS=['Tipe modul','Parameter','Tinjau'];
+
+/* ===== render ===== */
+function render(){
+  stepLabel.textContent='Langkah '+state.step+' dari 3';
+  stepperEl.innerHTML=STEPS.map((t,i)=>{
+    const n=i+1,cls=n<state.step?'done':n===state.step?'cur':'';
+    return '<div class="stp '+cls+'"><span class="n">'+(n<state.step?'✓':n)+
+      '</span><span class="t">'+t+'</span></div>';
+  }).join('');
+  btnBack.style.visibility=state.step===1||state.saved?'hidden':'visible';
+  btnNext.textContent=state.step===3?'Simpan modul':state.step===2?'Tinjau':'Lanjut';
+  btnNext.style.display=state.saved?'none':'';
+  typeChip.textContent='Tipe: '+(state.type||'—');
+  typeChip.classList.toggle('none',!state.type);
+  if(state.step===1)renderStep1();
+  else if(state.step===2)renderStep2();
+  else renderStep3();
+  validateLive();
+}
+function renderStep1(){
+  bodyEl.innerHTML='<h2>Pilih tipe modul</h2>'+
+    '<p class="m-sub">Satu modul = satu kanal. Tipe menentukan parameter khusus di langkah berikutnya.</p>'+
+    '<div class="tgrid" role="radiogroup" aria-label="Tipe modul">'+
+    TYPES.map(t=>{
+      const keys=t.keys.map(k=>SPECIAL[k].label.toLowerCase()).join(', ');
+      return '<button type="button" class="tcard" role="radio" aria-checked="'+(state.type===t.id)+
+        '" data-t="'+t.id+'"><span class="tn">'+t.id+'</span><span class="tr">'+t.role+'</span>'+
+        (keys?'<span class="tk">khusus: '+keys+'</span>':'<span class="tk">tanpa parameter khusus</span>')+'</button>';
+    }).join('')+'</div>';
+  bodyEl.querySelectorAll('.tcard').forEach(c=>c.addEventListener('click',()=>{
+    state.type=c.dataset.t;state.dirty=true;render();
+    const el=bodyEl.querySelector('[data-t="'+state.type+'"]');if(el)el.focus();
+  }));
+}
+function fldHTML(f,val){
+  const v=val!==undefined?val:(f.def!==undefined?f.def:'');
+  const id='f_'+f.key,req=f.req?' <span class="req">*</span>':'';
+  const cls=f.uitext?'':'';
+  let ctrl='';
+  if(f.type==='toggle'){
+    const on=!!v;
+    ctrl='<div class="trow"><button type="button" class="tgl" role="switch" id="'+id+'" aria-checked="'+on+
+      '" aria-label="'+f.label+'" data-k="'+f.key+'"></button><span class="tstate" id="'+id+'_s">'+(on?'Aktif':'Nonaktif')+'</span></div>';
+  }else if(f.type==='select'){
+    ctrl='<select class="inp" id="'+id+'" data-k="'+f.key+'">'+f.options.map(o=>
+      '<option value="'+o+'"'+(v===o?' selected':'')+'>'+o+'</option>').join('')+'</select>';
+  }else if(f.type==='textarea'){
+    ctrl='<textarea class="inp" id="'+id+'" data-k="'+f.key+'">'+String(v).replace(/</g,'&lt;')+'</textarea>';
+  }else{
+    const suf=f.suffix?'':'';
+    ctrl='<input class="inp" id="'+id+'" data-k="'+f.key+'" type="'+f.type+'" value="'+String(v).replace(/"/g,'&quot;')+'"'+
+      (f.min!==undefined?' min="'+f.min+'"':'')+(f.max!==undefined?' max="'+f.max+'"':'')+
+      (f.type==='number'?' inputmode="numeric"':'')+'>';
+  }
+  return '<div class="fld'+(f.type==='textarea'||f.full?' full':'')+'" id="w_'+f.key+'">'+
+    '<label class="lbl" for="'+id+'">'+f.label+req+'</label>'+ctrl+
+    (f.hint?'<span class="hint">'+f.hint+'</span>':'')+
+    (f.suffix?'<span class="hint">Satuan: '+f.suffix+'.</span>':'')+
+    '<span class="ferr" id="e_'+f.key+'" hidden></span></div>';
+}
+function defsFor(k){return SPECIAL[k];}
+function renderStep2(){
+  const t=TYPES.find(x=>x.id===state.type);
+  const spec=t.keys.map(k=>Object.assign({key:k},defsFor(k)));
+  bodyEl.innerHTML='<div id="esum"></div>'+
+    '<h2>Parameter — '+t.id+'</h2>'+
+    '<p class="m-sub">Tanda <span class="req" style="color:var(--err-ink)">*</span> wajib diisi. Kosongkan yang tidak dipakai.</p>'+
+    '<div class="sect"><div class="fgrid">'+COMMON.map(f=>fldHTML(f,state.vals[f.key])).join('')+'</div></div>'+
+    (spec.length?'<div class="sect"><h2>Parameter khusus '+t.id+'</h2><p class="m-sub">Hanya berlaku untuk tipe ini.</p>'+
+      '<div class="fgrid">'+spec.map(f=>fldHTML(f,state.vals[f.key])).join('')+'</div></div>'
+      :'<div class="sect"><p class="m-sub">Tipe '+t.id+' tidak punya parameter khusus yang diketahui.</p></div>');
+  bodyEl.querySelectorAll('[data-k]').forEach(el=>{
+    if(el.classList.contains('tgl')){
+      el.addEventListener('click',()=>{
+        const on=el.getAttribute('aria-checked')!=='true';
+        el.setAttribute('aria-checked',on);$(el.id+'_s').textContent=on?'Aktif':'Nonaktif';
+        state.vals[el.dataset.k]=on;state.dirty=true;validateLive();
+      });
+    }else{
+      el.addEventListener('input',()=>{state.vals[el.dataset.k]=el.value;state.dirty=true;validateLive();});
+      el.addEventListener('change',()=>{state.vals[el.dataset.k]=el.value;validateLive();});
+    }
+  });
+  showErrors(validate(false));
+}
+function allDefs(){
+  const t=TYPES.find(x=>x.id===state.type);
+  const spec=t?t.keys.map(k=>Object.assign({key:k},defsFor(k))):[];
+  return COMMON.concat(spec);
+}
+function validate(show){
+  const errs=[];
+  allDefs().forEach(f=>{
+    let v=state.vals[f.key];if(v===undefined)v=f.def;
+    const msgEl=$('e_'+f.key),inp=$('f_'+f.key),wrap=$('w_'+f.key);
+    let msg='';
+    if(f.req&&(v===undefined||v===''||v===null))msg=f.label+' wajib diisi.';
+    else if(f.type==='number'&&v!==''&&v!==undefined&&v!==null){
+      const n=Number(v);
+      if(isNaN(n))msg=f.label+' harus angka.';
+      else if(f.min!==undefined&&n<f.min)msg=f.label+' minimal '+f.min+'.';
+      else if(f.max!==undefined&&n>f.max)msg=f.label+' maksimal '+f.max+'.';
+    }
+    if(msg)errs.push({key:f.key,msg:msg});
+    if(show&&msgEl){msgEl.textContent=msg;msgEl.hidden=!msg;if(inp)inp.classList.toggle('bad',!!msg);}
+    else if(msgEl){msgEl.hidden=true;if(inp)inp.classList.remove('bad');}
+  });
+  const box=$('esum');
+  if(box){
+    if(show&&errs.length){
+      box.innerHTML='<div class="esum" role="alert"><p class="t">Belum bisa lanjut — '+errs.length+' kolom bermasalah:</p><ul>'+
+        errs.map(e=>'<li><a href="#w_'+e.key+'">'+e.msg+'</a></li>').join('')+'</ul></div>';
+      box.querySelectorAll('a').forEach(a=>a.addEventListener('click',ev=>{
+        ev.preventDefault();const w=$(a.getAttribute('href').slice(1));
+        if(w){w.scrollIntoView({block:'center'});const i=w.querySelector('[data-k]');if(i)i.focus();}
+      }));
+    }else box.innerHTML='';
+  }
+  return errs;
+}
+function validateLive(){
+  if(state.step===1){btnNext.disabled=!state.type;return;}
+  if(state.step===2){btnNext.disabled=validate(false).length>0;return;}
+  btnNext.disabled=false;
+}
+function paramJSON(){
+  const o={};
+  allDefs().forEach(f=>{
+    let v=state.vals[f.key];if(v===undefined)v=f.def;
+    if(v===''||v===undefined||v===null)return;
+    o[f.key]=f.type==='number'?Number(v):v;
+  });
+  return o;
+}
+function renderStep3(){
+  const t=TYPES.find(x=>x.id===state.type);
+  const o=paramJSON();
+  const rows=Object.keys(o).map(k=>{
+    const d=allDefs().find(x=>x.key===k);
+    return '<dt>'+(d?d.label:k)+'</dt><dd>'+String(o[k]).replace(/</g,'&lt;')+'</dd>';
+  }).join('');
+  bodyEl.innerHTML='<h2>Tinjau sebelum menyimpan</h2>'+
+    '<p class="m-sub">Modul <span style="font-family:var(--mono);color:var(--ink)">'+
+    String(o.nama||'—').replace(/</g,'&lt;')+'</span> · tipe <span style="font-family:var(--mono);color:var(--orange-ink)">'+t.id+'</span>.</p>'+
+    '<dl class="rev">'+rows+'</dl>'+
+    '<h2 style="margin-top:16px">modul.parameter (JSON)</h2>'+
+    '<p class="m-sub">Tersimpan sebagai JSONB di kolom <span style="font-family:var(--mono)">modul.parameter</span>.</p>'+
+    '<pre class="json" aria-label="Pratinjau JSON parameter">'+JSON.stringify(Object.assign({tipe:t.id},o),null,2).replace(/</g,'&lt;')+'</pre>';
+}
+function doSave(){
+  const t=TYPES.find(x=>x.id===state.type);
+  const o=paramJSON();
+  state.saved=true;state.dirty=false;
+  bodyEl.innerHTML='<div class="okbox"><div class="okdot">✓</div>'+
+    '<h2>Modul tersimpan</h2>'+
+    '<p><span style="font-family:var(--mono);color:var(--ink)">'+String(o.nama).replace(/</g,'&lt;')+'</span> · tipe <span style="font-family:var(--mono)">'+t.id+'</span> · kode '+o.kode+'</p>'+
+    '<p>Modul muncul di monitor setelah engine memuat ulang konfigurasi.</p></div>';
+  btnBack.style.visibility='hidden';btnNext.style.display='none';
+  const foot=document.querySelector('.m-foot');
+  if(!$('btnDone')){
+    const b=document.createElement('button');b.className='btn btn-primary';b.id='btnDone';b.textContent='Tutup';
+    b.addEventListener('click',()=>$('cfmOk').click());foot.appendChild(b);
+  }
+  $('btnDone').focus();
+}
+/* ===== nav ===== */
+btnNext.addEventListener('click',()=>{
+  if(state.step===1&&state.type){state.step=2;render();return;}
+  if(state.step===2){
+    const errs=validate(true);
+    if(errs.length){const w=$('w_'+errs[0].key);if(w){w.scrollIntoView({block:'center'});const i=w.querySelector('[data-k]');if(i)i.focus();}return;}
+    state.step=3;render();return;
+  }
+  if(state.step===3){doSave();return;}
+});
+btnBack.addEventListener('click',()=>{if(state.step>1){state.step--;render();}});
+function tryClose(){
+  if(state.dirty&&!state.saved){$('cfm').classList.add('open');$('cfmCancel').focus();}
+  else finishClose();
+}
+function finishClose(){$('cfm').classList.remove('open');}
+$('btnX').addEventListener('click',tryClose);
+$('cfmCancel').addEventListener('click',finishClose);
+$('cfmOk').addEventListener('click',()=>{
+  finishClose();
+  document.querySelector('.modal').innerHTML='<div class="okbox"><h2>Wizard ditutup</h2><p class="m-sub">Mockup: tidak ada data yang dikirim ke server.</p></div>';
+  document.querySelector('.m-foot').style.display='none';
+  document.querySelector('.stepper').style.display='none';
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if($('cfm').classList.contains('open')){finishClose();return;}
+    tryClose();
+  }
+  if(e.key==='Tab'){ /* trap fokus sederhana di modal */
+    const m=$('modal');
+    const f=m.querySelectorAll('button,input,select,textarea,a[href]');
+    const list=[...f].filter(el=>el.offsetParent!==null);
+    if(!list.length)return;
+    const first=list[0],last=list[list.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+});
+render();
+</script>
+</body>
+</html>
