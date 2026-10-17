@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#161311">
+<title>otomaX — Mutasi Saldo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#161311; --surface:#201c18; --surface2:#262019;
+  --ink:#f4efe8; --body:#d8d1c6; --muted:#b3aa9c;
+  --line:#332c24; --line-soft:#2b251e; --chip:#2a241e;
+  --orange:#ff8f52; --orange-deep:#e07a35; --orange-ink:#ffb98a; --orange-soft:#3d2817;
+  --ok:#54c47e; --ok-bg:#183024; --ok-ink:#8fdcab;
+  --warn:#eeb04a; --warn-bg:#38290f; --warn-ink:#f2cc82;
+  --err:#ef6f6f; --err-bg:#3a1c1c; --err-ink:#f49c9c;
+  --info:#8b96f0;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--body);font-family:var(--sans);font-size:13px;
+  display:grid;grid-template:"top top" 46px "nav main" 1fr "nav foot" 28px/58px 1fr;
+  height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(255,143,82,.28)}
+:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+.topbar{grid-area:top;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink)}
+.brand .prompt{color:var(--ok-ink)}
+.brand small{font-weight:400;color:var(--muted);font-size:11px}
+.cmdk{flex:0 1 420px;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);
+  border-radius:6px;padding:7px 10px;color:var(--muted);font-family:var(--mono);font-size:12px;text-align:left;min-width:0}
+.cmdk:hover{border-color:var(--orange-deep);color:var(--ink)}
+.cmdk .ph{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+kbd{font-family:var(--mono);font-size:10.5px;background:var(--surface2);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--muted)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:16px;font-family:var(--mono);font-size:12px}
+.live-dot{display:flex;align-items:center;gap:7px;color:var(--ok-ink);font-size:11.5px;font-weight:600}
+.live-dot .d{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px rgba(84,196,126,.7)}
+.clock{color:var(--ink);font-variant-numeric:tabular-nums}
+.clock span{color:var(--muted);font-size:10.5px}
+.shift{color:var(--muted);font-size:11.5px}
+.rail{grid-area:nav;background:var(--surface);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px}
+.rail button{position:relative;width:42px;height:42px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;border-radius:7px;color:var(--muted)}
+.rail button svg{width:18px;height:18px}
+.rail button:hover{color:var(--ink);background:var(--surface2)}
+.rail button.on{color:var(--ink);background:var(--surface2)}
+.rail button.on::before{content:"";position:absolute;left:-8px;top:10px;bottom:10px;width:2.5px;border-radius:2px;background:var(--orange)}
+.rail button::after{content:attr(data-label);position:absolute;left:52px;top:50%;transform:translateY(-50%);
+  background:var(--chip);border:1px solid var(--line);color:var(--ink);font-family:var(--sans);font-size:12px;font-weight:500;
+  padding:5px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:50}
+.rail button:hover::after{opacity:1}
+.rail .sp{flex:1}
+.main{grid-area:main;padding:12px;overflow-y:auto;min-height:0}
+.page{max-width:1280px;display:flex;flex-direction:column;gap:12px}
+.pg-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pg-head h1{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.pg-head .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.pg-head .acts{margin-left:auto;display:flex;gap:8px}
+.btn{background:var(--surface2);border:1px solid var(--line);border-radius:6px;color:var(--body);
+  font-family:var(--mono);font-size:11.5px;font-weight:600;padding:7px 12px;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:var(--orange-deep);color:var(--ink)}
+/* ── filter chips ── */
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--muted);border-radius:999px;
+  padding:4px 10px;font-family:var(--mono);font-size:11px;font-weight:500;font-variant-numeric:tabular-nums}
+.chip:hover{border-color:var(--orange-deep);color:var(--ink)}
+.chip.on{background:var(--orange-soft);border-color:var(--orange-deep);color:var(--orange-ink);font-weight:600}
+.chip .n{opacity:.85;margin-left:4px}
+.chips .cap{font-size:11px;color:var(--muted);margin-right:2px}
+/* ── ringkasan per dompet ── */
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dcard{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:10px 14px;min-width:0}
+.dcard .nm{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:8px;
+  display:flex;align-items:center;gap:8px}
+.dcard .nm .kd{background:var(--chip);border:1px solid var(--line);border-radius:4px;padding:2px 7px;
+  font-size:10.5px;color:var(--info)}
+.dcard .row{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:11px;color:var(--muted)}
+.dcard .row b{font-family:var(--mono);font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.dcard .in b{color:var(--ok-ink)} .dcard .out b{color:var(--err-ink)}
+.dcard .bal{border-top:1px solid var(--line-soft);margin-top:5px;padding-top:7px}
+.dcard .bal b{color:var(--ink);font-size:14px}
+/* ── panel/tabel ── */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.sect-h{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sect-h h2{font-size:12.5px;font-weight:600;color:var(--ink)}
+.sect-h .cap{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.sect-h .acts{margin-left:auto;display:flex;gap:8px;align-items:center}
+.cari{background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--body);
+  font-family:var(--mono);font-size:11.5px;padding:6px 10px;width:220px}
+.cari::placeholder{color:var(--muted)}
+.cari:focus{border-color:var(--orange-deep);outline:none}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-family:var(--sans);font-size:11px;font-weight:600;
+  color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th.num{text-align:right}
+tbody td{font-family:var(--mono);font-size:12px;color:var(--body);padding:0 10px;height:31px;
+  border-bottom:1px solid var(--line-soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr:hover td{background:var(--surface2)}
+tbody tr:last-child td{border-bottom:none}
+td.num{text-align:right}
+td.kode{color:var(--info);font-weight:500}
+td.in{color:var(--ok-ink)} td.out{color:var(--err-ink)}
+td.ket{font-family:var(--sans);font-size:12px;color:var(--muted);max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.bdg{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;padding:3px 8px;border-radius:4px;white-space:nowrap;color:var(--info);background:rgba(139,150,240,.12)}
+/* toast */
+.toasts{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:200}
+.toast{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--line);border-radius:7px;
+  padding:10px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-family:var(--mono);font-size:12px;color:var(--ink);
+  animation:tin .18s ease-out}
+.toast .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+@keyframes tin{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+/* palet */
+.pal-ovl{position:fixed;inset:0;background:rgba(10,7,5,.62);display:none;padding-top:14vh;justify-content:center;z-index:150;align-items:flex-start}
+.pal-ovl.open{display:flex}
+.cmdk-box{width:560px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:9px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);overflow:hidden}
+.cmdk-box input{width:100%;background:none;border:none;border-bottom:1px solid var(--line);color:var(--ink);
+  font-family:var(--mono);font-size:13.5px;padding:14px 16px;outline:none}
+.cmdk-box .lst{max-height:300px;overflow-y:auto;padding:6px}
+.cmdk-box .it{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:var(--body);
+  font-size:13px;cursor:pointer;text-decoration:none}
+.cmdk-box .it:hover,.cmdk-box .it.sel{background:var(--surface2)}
+.cmdk-box .it .k{margin-left:auto}
+.cmdk-box .empty{padding:22px;text-align:center;color:var(--muted);font-size:12px;font-family:var(--mono)}
+.statusbar{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--surface);
+  border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.statusbar .sep{color:var(--line)}
+.bnav{display:none}
+@media(max-width:900px){
+  body{grid-template:"top" 46px "main" 1fr "foot" 28px/1fr}
+  .rail{display:none}
+  .main{padding:12px 12px 96px}
+  table{min-width:680px}
+  .sum{grid-template-columns:1fr}
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:90}
+  .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);text-decoration:none;
+    font-size:10.5px;font-weight:600;min-height:48px;justify-content:center;border-radius:10px}
+  .bnav a svg{width:20px;height:20px}
+  .bnav a.on{color:var(--orange)}
+  .cmdk .ph{display:none}
+  /* F1: topbar responsif — cmdk menyusut, elemen non-esensial disembunyikan */
+  .topbar{gap:10px;padding:0 10px}
+  .cmdk{flex:1 1 auto;min-width:0}
+  .cmdk kbd{display:none}
+  .brand small{display:none}
+  .shift{display:none}
+  .top-right{gap:10px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}
+  .rail button:hover::after{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="prompt">&gt;_</span> otomaX <small>sistem</small></div>
+  <button class="cmdk" id="palBtn" aria-label="Buka palet perintah"><span class="ph">Ketik perintah atau cari layar…</span><kbd>Ctrl</kbd><kbd>K</kbd></button>
+  <div class="top-right">
+    <span class="live-dot"><span class="d"></span>Live</span>
+    <span class="clock" id="clock">--:--:-- <span>WIB</span></span>
+    <span class="shift">shift malam</span>
+  </div>
+</header>
+
+<nav class="rail" aria-label="Navigasi utama">
+  <button data-label="Dashboard" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></button>
+  <button data-label="Transaksi" aria-label="Transaksi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+  <button data-label="Reseller" aria-label="Reseller"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6M16 5.5a3.2 3.2 0 0 1 0 5.8M18.5 14.7c1.4.7 2.3 1.9 2.6 3.8"/></svg></button>
+  <button data-label="Produk" aria-label="Produk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg></button>
+  <button data-label="Modul & terminal" aria-label="Modul dan terminal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="7" width="10" height="14" rx="2"/><path d="M10 18.5h4M12 3v2"/></svg></button>
+  <button data-label="Inbox" aria-label="Inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></button>
+  <button data-label="Dompet" aria-label="Dompet" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h5v-3h-5a2.5 2.5 0 0 0 0 5z"/></svg></button>
+  <div class="sp"></div>
+  <button data-label="Pengaturan" aria-label="Pengaturan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></svg></button>
+</nav>
+
+<main class="main">
+  <div class="page">
+    <div class="pg-head">
+      <div>
+        <h1>Mutasi saldo</h1>
+        <div class="sub">tabel mutasi · kolom kode_dompet · multi-dompet P0 #10</div>
+      </div>
+      <div class="acts">
+        <input class="cari" id="q" aria-label="Cari mutasi" placeholder="Cari reseller / keterangan…">
+      </div>
+    </div>
+
+    <!-- ── filter chips kode dompet ── -->
+    <div class="chips" role="group" aria-label="Filter kode dompet" id="chips">
+      <span class="cap">Kode dompet:</span>
+    </div>
+
+    <!-- ── ringkasan per dompet ── -->
+    <div class="sum" id="sum" aria-label="Ringkasan saldo per dompet"></div>
+
+    <!-- ── tabel ── -->
+    <section class="panel" aria-label="Tabel mutasi saldo">
+      <div class="sect-h">
+        <h2>Mutasi</h2>
+        <span class="cap" id="rowCount"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table aria-label="Tabel mutasi saldo">
+          <thead><tr>
+            <th>Kode</th><th>Tanggal</th><th>Reseller</th><th>Jenis</th><th>Dompet</th>
+            <th class="num">Jumlah</th><th class="num">Saldo akhir</th><th>Keterangan</th>
+          </tr></thead>
+          <tbody id="mxRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<!-- palet -->
+<div class="pal-ovl" id="palOvl">
+  <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Palet perintah">
+    <input id="palIn" aria-label="Ketik perintah" placeholder="Ketik perintah atau cari layar…" autocomplete="off">
+    <div class="lst" id="palLst"></div>
+  </div>
+</div>
+
+<nav class="bnav" aria-label="Navigasi bawah">
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Transaksi</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>Inbox</a>
+  <a href="#" class="on" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h5v-3h-5a2.5 2.5 0 0 0 0 5z"/></svg>Dompet</a>
+  <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Sistem</a>
+</nav>
+
+<footer class="statusbar">
+  <span>otomaX linux · p0-sistem</span><span class="sep">|</span>
+  <span>mutasi.kode_dompet → dompet · reseller_saldo per (kode_reseller, kode_dompet)</span><span class="sep">|</span>
+  <span><kbd>Ctrl</kbd>+<kbd>K</kbd> palet perintah</span>
+</footer>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+
+function tick(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Jakarta'}));
+  const p=n=>String(n).padStart(2,'0');
+  $('#clock').innerHTML=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())} <span>WIB</span>`;}
+tick();setInterval(tick,1000);
+
+function toast(msg){const t=document.createElement('div');t.className='toast';
+  t.innerHTML='<span class="dot"></span><span></span>';t.lastChild.textContent=msg;
+  $('#toasts').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';
+    setTimeout(()=>t.remove(),260);},3000);}
+
+const fmtRp=n=>n.toLocaleString('id-ID');
+const dompet=[{k:'1',nama:'Tunai'},{k:'2',nama:'eWallet'},{k:'3',nama:'Bank'}];
+
+/* ── data mutasi (simulasi) ── */
+const R=[['OR0042','Toko Berkah'],['OR0157','Pulsa Jaya'],['OR0201','Cell Mandiri'],['OR0063','Aneka Cell'],['OR0118','Mitra Pulsa']];
+const raw=[
+  ['2026-10-17 21:02',0,'deposit',  500000,'Tiket deposit #88412 lunas'],
+  ['2026-10-17 20:47',0,'transaksi', -27500,'XL 25rb → 6281220xxxxxx'],
+  ['2026-10-17 20:31',1,'deposit', 1000000,'Tiket deposit #88410 lunas'],
+  ['2026-10-17 19:58',1,'transaksi', -52000,'PLN 50rb token'],
+  ['2026-10-17 19:12',2,'refund',    27500,'Refund XL 25rb gagal'],
+  ['2026-10-17 18:40',0,'komisi',    12500,'Komisi tunda masuk'],
+  ['2026-10-17 17:55',2,'transaksi',-107500,'Telkomsel 100rb'],
+  ['2026-10-17 17:20',1,'koreksi',   50000,'Koreksi manual operator (audit)'],
+  ['2026-10-17 16:48',0,'transaksi', -85000,'Tri 75rb + pulsa darurat'],
+  ['2026-10-17 16:05',2,'deposit',  250000,'Tiket deposit #88405 lunas'],
+  ['2026-10-17 15:32',1,'transaksi', -32000,'Axis 30rb'],
+  ['2026-10-17 14:58',0,'transfer',-100000,'Transfer ke OR0157 Pulsa Jaya'],
+  ['2026-10-17 14:20',1,'deposit',  750000,'Tiket deposit #88401 lunas'],
+  ['2026-10-17 13:44',2,'transaksi', -61000,'Indosat 60rb'],
+  ['2026-10-17 13:10',0,'tukar_komisi',45000,'TUKAR komisi → saldo'],
+  ['2026-10-17 12:36',1,'penarikan',-200000,'Tarik saldo ke rekening'],
+  ['2026-10-17 11:52',2,'transaksi', -27500,'XL 25rb → 6281777xxxxxx'],
+  ['2026-10-17 11:15',0,'deposit', 1000000,'Tiket deposit #88396 lunas'],
+  ['2026-10-17 10:38',1,'transaksi', -93000,'Smartfren 90rb'],
+  ['2026-10-17 10:02',2,'transaksi', -27500,'XL 25rb → 6281999xxxxxx'],
+  ['2026-10-16 22:14',0,'refund',    85000,'Refund Tri 75rb gagal'],
+  ['2026-10-16 21:47',1,'transaksi',-107500,'Telkomsel 100rb'],
+  ['2026-10-16 21:02',2,'deposit',  500000,'Tiket deposit #88380 lunas'],
+  ['2026-10-16 20:35',0,'transaksi', -52000,'PLN 50rb token'],
+];
+/* running balance per dompet, urutan terbaru → tertua dibalik */
+const mutasi=[];
+[...raw].reverse().forEach((r,i)=>{
+  const [tgl,di,jenis,jumlah,ket]=r;
+  const dom=dompet[di].k;
+  mutasi.unshift({kode:`MUT-26${String(41880+i).padStart(5,'0')}`,tgl,
+    reseller:R[i%R.length][0],namaR:R[i%R.length][1],jenis,dompet:dom,jumlah,ket});
+});
+/* saldo akhir: hitung per dompet dari yang terlama */
+{
+  const bal={};const asc=[...mutasi].reverse();
+  asc.forEach(m=>{bal[m.dompet]=(bal[m.dompet]||0)+m.jumlah;m.saldo=bal[m.dompet];});
+}
+
+let filter='all', q='';
+
+/* ── chips ── */
+function renderChips(){
+  const box=$('#chips');
+  box.querySelectorAll('.chip').forEach(c=>c.remove());
+  const all=document.createElement('button');
+  all.className='chip'+(filter==='all'?' on':'');all.setAttribute('aria-pressed',filter==='all');
+  all.innerHTML=`Semua <span class="n">${mutasi.length}</span>`;
+  all.setAttribute('aria-label','Filter semua dompet');
+  all.onclick=()=>{filter='all';paint();};
+  box.appendChild(all);
+  dompet.forEach(d=>{
+    const n=mutasi.filter(m=>m.dompet===d.k).length;
+    const c=document.createElement('button');
+    c.className='chip'+(filter===d.k?' on':'');
+    c.setAttribute('aria-pressed',filter===d.k);
+    c.setAttribute('aria-label',`Filter dompet ${d.k} ${d.nama}`);
+    c.innerHTML=`Dompet ${d.k} · ${d.nama} <span class="n">${n}</span>`;
+    c.onclick=()=>{filter=d.k;paint();};
+    box.appendChild(c);
+  });
+}
+
+/* ── ringkasan per dompet ── */
+function paintSum(){
+  const box=$('#sum');box.innerHTML='';
+  const list=filter==='all'?dompet:dompet.filter(d=>d.k===filter);
+  list.forEach(d=>{
+    const rows=mutasi.filter(m=>m.dompet===d.k);
+    const masuk=rows.filter(m=>m.jumlah>0).reduce((a,m)=>a+m.jumlah,0);
+    const keluar=rows.filter(m=>m.jumlah<0).reduce((a,m)=>a-m.jumlah,0);
+    const akhir=rows.length?rows[0].saldo:0;
+    const el=document.createElement('div');el.className='dcard';
+    el.innerHTML=`
+      <div class="nm"><span class="kd">${d.k}</span> ${d.nama}</div>
+      <div class="row in"><span>Total masuk</span><b>+${fmtRp(masuk)}</b></div>
+      <div class="row out"><span>Total keluar</span><b>−${fmtRp(keluar)}</b></div>
+      <div class="row bal"><span>Saldo akhir</span><b>${fmtRp(akhir)}</b></div>`;
+    box.appendChild(el);
+  });
+}
+
+/* ── tabel ── */
+function paintTable(){
+  const tb=$('#mxRows');tb.innerHTML='';
+  const rows=mutasi.filter(m=>(filter==='all'||m.dompet===filter)
+    &&(!q||(m.reseller+m.namaR+m.ket).toLowerCase().includes(q)));
+  rows.forEach(m=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="kode">${m.kode}</td><td>${m.tgl}</td>
+      <td><span style="color:var(--info)">${m.reseller}</span> <span style="color:var(--muted);font-family:var(--sans);font-size:11px">${m.namaR}</span></td>
+      <td><span class="bdg" title="jenis mutasi: ${m.jenis}">${m.jenis.replace(/_/g,' ')}</span></td>
+      <td><span class="bdg">D${m.dompet}</span></td>
+      <td class="num ${m.jumlah>0?'in':'out'}">${m.jumlah>0?'+':'−'}${fmtRp(Math.abs(m.jumlah))}</td>
+      <td class="num">${fmtRp(m.saldo)}</td>
+      <td class="ket">${m.ket}</td>`;
+    tb.appendChild(tr);
+  });
+  $('#rowCount').textContent=`${rows.length} baris${filter!=='all'?' · dompet '+filter:''}`;
+}
+
+function paint(){renderChips();paintSum();paintTable();}
+$('#q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();paintTable();});
+paint();
+
+/* ── palet ── */
+const screens=[
+  {t:'Pengguna & peran',f:'pengguna-peran.html',k:'Ctrl+1'},
+  {t:'Daftar hitam',f:'daftar-hitam.html',k:'Ctrl+2'},
+  {t:'Mutasi saldo',f:'mutasi-dompet.html',k:'Ctrl+3'},
+];
+const palOvl=$('#palOvl'),palIn=$('#palIn'),palLst=$('#palLst');
+function renderPal(x=''){
+  const list=screens.filter(s=>s.t.toLowerCase().includes(x.toLowerCase()));
+  palLst.innerHTML=list.length?list.map((s,i)=>
+    `<a class="it${i===0?' sel':''}" href="${s.f}"><span>${s.t}</span><span class="k"><kbd>${s.k}</kbd></span></a>`).join('')
+    :'<div class="empty">tidak ada layar yang cocok</div>';
+}
+$('#palBtn').onclick=()=>{palOvl.classList.add('open');renderPal();palIn.value='';
+  setTimeout(()=>palIn.focus(),30);};
+palOvl.addEventListener('click',e=>{if(e.target===palOvl)palOvl.classList.remove('open');});
+palIn.addEventListener('input',()=>renderPal(palIn.value));
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palBtn').click();}
+  if(e.key==='Escape')palOvl.classList.remove('open');
+  if(palOvl.classList.contains('open')&&e.key==='Enter'){
+    const a=palLst.querySelector('.it.sel');if(a)location.href=a.getAttribute('href');}
+});
+</script>
+</body>
+</html>
