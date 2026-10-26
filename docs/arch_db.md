@@ -84,11 +84,12 @@ CREATE TABLE transaksi (
     CONSTRAINT fk_transaksi_modul    FOREIGN KEY (kode_modul)    REFERENCES modul(kode),
     CONSTRAINT fk_transaksi_terminal FOREIGN KEY (kode_terminal) REFERENCES terminal(kode),
     CONSTRAINT fk_transaksi_dompet   FOREIGN KEY (kode_dompet)   REFERENCES dompet(kode),
-    CONSTRAINT chk_transaksi_jadwal CHECK (status <> <TERJADWAL> OR tgl_jadwal IS NOT NULL)
-    -- [R] engine mensyaratkan: status=Terjadwal ⇒ tgl_jadwal NOT NULL (arch_engine.md §4.3).
-    -- <TERJADWAL> = PLACEHOLDER: ganti dengan literal int ordinal ItemStatus.Terjadwal
-    -- SEBELUM DDL dijalankan. Ordinal tidak terpetakan dari binary (arch_engine.md §4.3
-    -- mempertahankan 49 nilai int tanpa mendokumentasikan ordinals) — JANGAN deploy dengan placeholder.
+    CONSTRAINT chk_transaksi_jadwal CHECK (status <> 5 OR tgl_jadwal IS NOT NULL)
+    -- [B] engine mensyaratkan: status=Terjadwal ⇒ tgl_jadwal NOT NULL (arch_engine.md §4.3).
+    -- Ordinal Terjadwal = 5 — terverifikasi 2026-10-17 dari CLI metadata inner-assembly.bin
+    -- (TypeDef row 1343 YAR.OtomaX.ItemStatus, Field rows 7525-7574, Constant table;
+    -- nama enum lolos obfuscator sebagai plaintext). 49 member: 0-4 masuk, 5 Terjadwal,
+    -- 19 Suspect, 20-23 Sukses*, 40-74 Gagal*/validasi, 200-201 ProsesUlang/Alihkan, 255 Unknown.
 );
 CREATE INDEX ix_transaksi_status  ON transaksi(status);
 CREATE INDEX ix_transaksi_reseller ON transaksi(kode_reseller);
